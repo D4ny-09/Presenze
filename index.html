@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #333;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="main-header">
+        <div class="header-container">
+            <h1>Registro Presenze</h1>
+        </div>
+        <div class="header-date">
+            <label for="datePicker">Data:</label>
+            <input type="date" id="dataPicker" class="date-input">
+        </div>
+    </header>
+
+    <nav class="tab-nav">
+        <button id="tabPresenze" class="tab-btn active">Appello</button>
+        <button id="tabSquadre" class="tab-btn"> Generatore Squadre</button>
+    </nav>
+
+    <section class="filters-section">
+        <div class="filters-row">
+            <input type="text" id="searchInput" class="search-input" placeholder="Cerca Nome o Cognome...">
+
+            <select id="filterRole" class="filter-select">
+                <option value="">Tutti i ruoli</option>
+            </select>
+
+            <select id="filterCatechismo" class="filter-select">
+                <option value="">Tutti gli Iscritti</option>
+            </select>
+
+            <select id="filterAnno" class="filter-select">
+                <option value="">Tutti gli anni</option>
+            </select>
+
+            <button id="newPerson" class="btn-success">+</button>
+
+        </div>
+        <div class="counters-grid">
+            <div class="counter-card">
+                <span class="counter-title">Catechismo</span>
+                <span id="countCatechismo" class="counter-number">0</span>
+            </div>
+            <div class="counter-card">
+                <span class="counter-title">Oratorio</span>
+                <span id="countOratorio" class="counter-number">0</span>
+            </div>
+            <div class="counter-card">
+                <span class="counter-title">Messa</span>
+                <span id="countMessa" class="counter-number">0</span>
+            </div>
+        </div>
+    </section>
+
+    <main id="AppelloContainer" class="main-content">
+
+    </main>
+    <div id="personModal" class="modal-overlay hidden">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2 id="modalTitle" class="modal-title">Nuovo Iscritto</h2>
+                <button id="closeModal" class="modal-close-btn">&times;</button>
+            </div>
+
+            <form id="personForm" class="modal-form">
+                <div class="form-group">
+                    <label for="inputNome">Nome:</label>
+                    <input type="text" id="inputNome" class="form-input" name="nome" required
+                        placeholder="Inserisci il nome">
+                </div>
+                <div class="form-group">
+                    <label for="inputCognome">Cognome:</label>
+                    <input type="text" id="inputCognome" class="form-input" name="cognome" required
+                        placeholder="Inserisci il cognome">
+                </div>
+                <div class="form-group">
+                    <label for="selectRuolo">Ruolo:</label>
+                    <select id="selectRuolo" class="form-select" name="ruolo">
+
+                        <option value="Bambino">Bambino</option>
+                        <option value="Animatore">Animatore</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="selectAnno">Anno:</label>
+                    <select id="selectAnno" class="form-select" name="anno">
+
+                        <option value="prima">Prima Elementare</option>
+                        <option value="seconda">Seconda Elementare</option>
+                        <option value="terza">Terza Elementare</option>
+                        <option value="quarta">Quarta Elementare</option>
+                        <option value="quinta">Quinta Elementare</option>
+                        <option value="primaMedia">Prima Media</option>
+                        <option value="secondaMedia">Seconda Media</option>
+                        <option value="terzaMedia">Terza Media</option>
+                        <option value="animatore">Animatore</option>
+
+                    </select>
+                </div>
+                <div class="form-group checkbox-group">
+                    <label for="inputCatechismo" class="checkbox-label">
+                        <input type="checkbox" id="inputCatechismo" name="iscrittoCatechismo">
+                        <span>Frequenta il Catechismo</span>
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label for="inputAllergie">Allergie:</label>
+                    <input type="text" id="inputAllergie" class="form-input" name="allergie"
+                        placeholder="Inserisci eventuali allergie">
+                </div>
+                <div class="form-group">
+                    <label for="inputDeleghe">Uscite/Deleghe:</label>
+                    <input type="text" id="inputDeleghe" class="form-input" name="deleghe"
+                        placeholder="Inserisci eventuali uscite anticipate o deleghe">
+                </div>
+                <div class="form-group">
+                    <label for="inputNote">Note:</label>
+                    <textarea id="inputNote" class="form-textarea" name="note" rows="3"
+                        placeholder="Inserisci eventuali note"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" id="cancelModalBtn" class="btn-secondary">Annulla</button>
+                    <button type="submit" class="btn-primary">Salva</button>
+                    <button type="button" id="deletePersonBtn" class="btn-danger hidden">Elimina</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+
+</html>
