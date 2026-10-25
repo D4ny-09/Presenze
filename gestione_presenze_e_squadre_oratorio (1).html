@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registro Presenze e Gestione Squadre Oratorio</title>
+  <!-- Tailwind CSS per la grafica responsive -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome per le icone -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts: Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    @media print {
+      .no-print { display: none !important; }
+      .print-only { display: block !important; }
+      body { background-color: white !important; color: black !important; }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col pb-24 sm:pb-8">
+
+  <!-- BARRA SUPERIORE -->
+  <header class="bg-indigo-600 text-white shadow-md sticky top-0 z-30 no-print">
+    <div class="max-w-4xl mx-auto px-4 py-3.5 flex flex-col sm:flex-row justify-between items-center gap-3">
+      <div class="flex items-center space-x-3 w-full sm:w-auto">
+        <div class="bg-indigo-500 p-2.5 rounded-xl shadow-inner text-white">
+          <i class="fa-solid fa-users-gear text-2xl"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-extrabold leading-tight">Presenze & Squadre</h1>
+          <p class="text-xs text-indigo-200 flex items-center gap-1.5 mt-0.5">
+            <span>Oratorio • Catechismo • Messa</span>
+            <span id="cloudStatus" class="inline-flex items-center gap-1 bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 px-1.5 py-0.5 rounded-full text-[10px]">
+              <i class="fa-solid fa-cloud text-[9px]"></i> Cloud Attivo
+            </span>
+          </p>
+        </div>
+      </div>
+      
+      <!-- Selezione Data -->
+      <div class="flex items-center space-x-2 bg-indigo-700/60 px-3 py-1.5 rounded-xl border border-indigo-500/50 w-full sm:w-auto justify-between sm:justify-start">
+        <label for="datePicker" class="text-xs font-medium text-indigo-100 flex items-center gap-1.5">
+          <i class="fa-regular fa-calendar"></i> Data:
+        </label>
+        <input type="date" id="datePicker" class="bg-white text-slate-800 text-sm font-semibold px-2 py-1 rounded-lg outline-none focus:ring-2 focus:ring-indigo-300">
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENUTO PRINCIPALE -->
+  <main class="max-w-4xl mx-auto px-4 py-6 w-full flex-1">
+
+    <!-- TAB NAVIGAZIONE: PRESENZE / SQUADRE -->
+    <div class="flex bg-slate-200 p-1.5 rounded-2xl mb-6 border border-slate-300/60 no-print">
+      <button id="tabPresenzeBtn" onclick="switchTab('presenze')" class="flex-1 py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 bg-white text-indigo-600 shadow-sm">
+        <i class="fa-solid fa-clipboard-user"></i>
+        <span>Appello Presenze</span>
+      </button>
+      <button id="tabSquadreBtn" onclick="switchTab('squadre')" class="flex-1 py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900">
+        <i class="fa-solid fa-trophy"></i>
+        <span>Generatore Squadre</span>
+      </button>
+    </div>
+
+    <!-- SEZIONE 1: APPELLO E REGISTRO PRESENZE -->
+    <div id="sectionPresenze" class="space-y-4">
+
+      <!-- FILTRI E BARRA DI RICERCA -->
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200/80 space-y-3.5 no-print">
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
+          
+          <!-- Ricerca Nome/Cognome -->
+          <div class="relative lg:col-span-4">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+            <input type="text" id="searchInput" placeholder="Cerca nome o cognome..." class="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+
+          <!-- Filtro Flag Catechismo (Per Catechiste) -->
+          <div class="lg:col-span-3">
+            <select id="entryFilter" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-medium text-slate-700 focus:bg-white focus:ring-2 focus:ring-indigo-500">
+              <option value="ALL">Tutti gli Iscritti</option>
+              <option value="SOLO_CAT">Solo Iscritti a Catechismo</option>
+              <option value="NO_CAT">Solo Oratorio (No Catechismo)</option>
+            </select>
+          </div>
+
+          <!-- Filtro Ruolo -->
+          <div class="lg:col-span-2">
+            <select id="roleFilter" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-medium text-slate-700 focus:bg-white focus:ring-2 focus:ring-indigo-500">
+              <option value="ALL">Tutti i Ruoli</option>
+              <option value="BAMBINO">Bambini</option>
+              <option value="ANIMATORE">Animatori</option>
+            </select>
+          </div>
+
+          <!-- Filtro Gruppo + Tasto Nuovo -->
+          <div class="lg:col-span-3 flex gap-2">
+            <select id="groupFilter" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-medium text-slate-700 focus:bg-white focus:ring-2 focus:ring-indigo-500">
+              <option value="ALL">Tutti i Gruppi</option>
+              <option value="1° Elementare">1° Elementare</option>
+              <option value="2° Elementare">2° Elementare</option>
+              <option value="3° Elementare">3° Elementare</option>
+              <option value="4° Elementare">4° Elementare</option>
+              <option value="5° Elementare">5° Elementare</option>
+              <option value="Medie">Medie</option>
+              <option value="Superiori">Superiori</option>
+              <option value="Staff">Staff / Animatori</option>
+            </select>
+
+            <button onclick="openModalWithSearch()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs sm:text-sm px-3.5 py-2.5 rounded-xl shadow-sm flex items-center justify-center shrink-0 active:scale-95 transition-transform">
+              <i class="fa-solid fa-user-plus sm:mr-1"></i>
+              <span class="hidden sm:inline">Nuovo</span>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Contatori Presenze -->
+        <div class="grid grid-cols-3 gap-2 pt-2 border-t border-slate-100 text-center">
+          <div class="bg-blue-50/70 border border-blue-100 rounded-xl py-2 px-1">
+            <span class="block text-[10px] font-bold text-blue-600 uppercase tracking-wider">Catechismo</span>
+            <span id="countCatechismo" class="text-sm sm:text-base font-extrabold text-blue-700">0</span>
+          </div>
+          <div class="bg-amber-50/70 border border-amber-100 rounded-xl py-2 px-1">
+            <span class="block text-[10px] font-bold text-amber-600 uppercase tracking-wider">Oratorio</span>
+            <span id="countOratorio" class="text-sm sm:text-base font-extrabold text-amber-700">0</span>
+          </div>
+          <div class="bg-purple-50/70 border border-purple-100 rounded-xl py-2 px-1">
+            <span class="block text-[10px] font-bold text-purple-600 uppercase tracking-wider">Messa</span>
+            <span id="countMessa" class="text-sm sm:text-base font-extrabold text-purple-700">0</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- INTESTAZIONE PER LA STAMPA -->
+      <div class="hidden print-only mb-6 text-center border-b pb-4">
+        <h1 class="text-2xl font-bold">Report Presenze Oratorio</h1>
+        <p id="printDateText" class="text-sm font-medium text-slate-600 mt-1">Data: --/--/----</p>
+      </div>
+
+      <!-- LISTA PERSONE -->
+      <div id="peopleList" class="space-y-3"></div>
+
+      <!-- STATO VUOTO / CREA AL VOLO -->
+      <div id="emptyState" class="hidden text-center py-10 bg-white rounded-2xl border border-dashed border-indigo-200 p-6 no-print">
+        <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-3 text-lg">
+          <i class="fa-solid fa-user-plus"></i>
+        </div>
+        <h3 class="text-base font-bold text-slate-800" id="emptyStateTitle">Profilo non trovato</h3>
+        <p class="text-xs text-slate-500 mt-1 mb-4" id="emptyStateText">Nessuna persona corrisponde ai filtri impostati.</p>
+        <button onclick="openModalWithSearch()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs px-4 py-2.5 rounded-xl shadow-md inline-flex items-center gap-2">
+          <i class="fa-solid fa-plus"></i>
+          <span id="quickAddBtnText">Crea nuovo profilo</span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- SEZIONE 2: GENERATORE SQUADRE -->
+    <div id="sectionSquadre" class="hidden space-y-5">
+      
+      <!-- CARD IMPOSTAZIONI SQUADRE -->
+      <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 space-y-4 no-print">
+        
+        <div class="flex items-center justify-between border-b pb-3">
+          <h2 class="text-base font-bold text-slate-800 flex items-center gap-2">
+            <i class="fa-solid fa-sliders text-indigo-600"></i> Configura Generazione
+          </h2>
+          <span class="bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold px-2.5 py-1 rounded-lg flex items-center gap-1">
+            <i class="fa-solid fa-user-check"></i> <span id="presentCountTeams">0</span> Presenti
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          
+          <!-- Numero di squadre -->
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-500 mb-1.5">Numero di Squadre</label>
+            <div class="flex items-center gap-3">
+              <input type="range" id="teamCountSlider" min="2" max="8" value="2" oninput="document.getElementById('teamCountLabel').innerText = this.value" class="w-full accent-indigo-600 cursor-pointer">
+              <span id="teamCountLabel" class="text-lg font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-xl border border-indigo-100 min-w-[2.5rem] text-center">2</span>
+            </div>
+          </div>
+
+          <!-- Modalità di bilanciamento -->
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-500 mb-1.5">Criterio di Divisione Classi / Età</label>
+            <select id="teamStrategy" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:bg-white focus:ring-2 focus:ring-indigo-500">
+              <option value="EQUILIBRATA">Mista / Equilibrata (Migliore: distribuisce le classi in ogni squadra)</option>
+              <option value="OMOGENEA">Omogenea (Separa le grandi dalle piccole per squadre)</option>
+              <option value="CASUALE">Casuale Pura (Mix totale senza considerare la classe)</option>
+            </select>
+          </div>
+
+        </div>
+
+        <!-- Filtro Presenti per Attività -->
+        <div class="pt-2 border-t border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div class="flex items-center gap-2 text-xs font-semibold text-slate-600">
+            <span>Includi chi è presente a:</span>
+            <label class="inline-flex items-center gap-1 cursor-pointer">
+              <input type="checkbox" id="includeOratorio" checked class="accent-indigo-600 rounded"> Oratorio
+            </label>
+            <label class="inline-flex items-center gap-1 cursor-pointer">
+              <input type="checkbox" id="includeCatechismo" checked class="accent-indigo-600 rounded"> Catechismo
+            </label>
+          </div>
+
+          <button onclick="generateTeams()" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm px-5 py-2.5 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 active:scale-95">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            <span>Genera Squadre Ora</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- RISULTATO SQUADRE GENERATE -->
+      <div id="teamsOutputContainer" class="space-y-4">
+        <div class="text-center py-12 bg-white rounded-2xl border border-dashed border-slate-200 text-slate-400 no-print">
+          <i class="fa-solid fa-shield-halved text-4xl mb-2 text-slate-300"></i>
+          <p class="text-sm">Premi **"Genera Squadre Ora"** per dividere i ragazzi presenti.</p>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- BARRA DI ESPORTAZIONE FISSA -->
+  <footer class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 p-3 shadow-lg z-20 no-print">
+    <div class="max-w-4xl mx-auto flex items-center justify-between gap-3">
+      <div class="text-xs text-slate-500 hidden sm:block">
+        <i class="fa-solid fa-database text-slate-400 mr-1"></i> Salvo automaticamente sul dispositivo.
+      </div>
+
+      <div class="flex items-center gap-2 w-full sm:w-auto">
+        <button onclick="exportCSV()" class="flex-1 sm:flex-initial bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm px-4 py-2.5 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 active:scale-95">
+          <i class="fa-solid fa-file-excel"></i>
+          <span>Scarica Excel/CSV</span>
+        </button>
+
+        <button onclick="window.print()" class="bg-slate-700 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm px-4 py-2.5 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 active:scale-95">
+          <i class="fa-solid fa-print"></i>
+          <span>Stampa / PDF</span>
+        </button>
+      </div>
+    </div>
+  </footer>
+
+  <!-- MODALE: CREA / MODIFICA PROFILO -->
+  <div id="personModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden no-print transition-all">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center mb-4 border-b pb-3">
+        <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2" id="modalTitle">
+          <i class="fa-solid fa-user-plus text-indigo-600"></i> Crea Profilo
+        </h3>
+        <button onclick="togglePersonModal(false)" class="text-slate-400 hover:text-slate-600 text-lg w-8 h-8 rounded-full flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="personForm" onsubmit="handleSavePerson(event)" class="space-y-3.5">
+        <input type="hidden" id="editPersonId" value="">
+
+        <!-- Selezione Ruolo -->
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Ruolo *</label>
+          <div class="grid grid-cols-2 gap-3">
+            <label class="flex items-center justify-center gap-2 p-2.5 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 font-medium text-xs text-slate-700 has-[:checked]:border-indigo-600 has-[:checked]:bg-indigo-50 has-[:checked]:text-indigo-700">
+              <input type="radio" name="role" value="BAMBINO" checked class="accent-indigo-600">
+              <i class="fa-solid fa-child text-indigo-500"></i> Bambino/Ragazzo
+            </label>
+            <label class="flex items-center justify-center gap-2 p-2.5 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 font-medium text-xs text-slate-700 has-[:checked]:border-purple-600 has-[:checked]:bg-purple-50 has-[:checked]:text-purple-700">
+              <input type="radio" name="role" value="ANIMATORE" class="accent-purple-600">
+              <i class="fa-solid fa-user-ninja text-purple-500"></i> Animatore
+            </label>
+          </div>
+        </div>
+
+        <!-- Flag Catechismo -->
+        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
+          <div>
+            <label for="personFaCatechismo" class="text-xs font-bold text-slate-800 cursor-pointer">Iscritto a Catechismo</label>
+            <p class="text-[10px] text-slate-500">Attiva per mostrare il profilo nei filtri catechismo</p>
+          </div>
+          <input type="checkbox" id="personFaCatechismo" checked class="w-5 h-5 accent-indigo-600 rounded cursor-pointer">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Nome *</label>
+            <input type="text" id="personNome" required placeholder="Es. Marco" class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Cognome *</label>
+            <input type="text" id="personCognome" required placeholder="Es. Rossi" class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Gruppo / Classe *</label>
+            <select id="personGruppo" required class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-indigo-500">
+              <option value="1° Elementare">1° Elementare</option>
+              <option value="2° Elementare">2° Elementare</option>
+              <option value="3° Elementare" selected>3° Elementare</option>
+              <option value="4° Elementare">4° Elementare</option>
+              <option value="5° Elementare">5° Elementare</option>
+              <option value="Medie">Medie</option>
+              <option value="Superiori">Superiori</option>
+              <option value="Staff">Staff / Animatori</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Telefono Genitore</label>
+            <input type="tel" id="personTelefono" placeholder="Es. 3331234567" class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase text-rose-600 mb-1">Allergie / Intolleranze</label>
+          <input type="text" id="personAllergie" placeholder="Es. Celiaco, no noci..." class="w-full px-3.5 py-2 border border-rose-200 bg-rose-50/30 rounded-xl text-xs focus:ring-2 focus:ring-rose-400">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase text-amber-700 mb-1">Uscite Anticipate / Deleghe</label>
+          <input type="text" id="personUscite" placeholder="Es. Esce alle 16:30..." class="w-full px-3.5 py-2 border border-amber-200 bg-amber-50/30 rounded-xl text-xs focus:ring-2 focus:ring-amber-400">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Altre Note</label>
+          <textarea id="personNote" rows="2" placeholder="Note aggiuntive..." class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500"></textarea>
+        </div>
+
+        <div class="pt-2 flex gap-3">
+          <button type="button" onclick="togglePersonModal(false)" class="w-1/2 py-2.5 border border-slate-200 text-slate-600 font-bold rounded-xl text-xs">
+            Annulla
+          </button>
+          <button type="submit" class="w-1/2 py-2.5 bg-emerald-600 text-white font-bold rounded-xl text-xs shadow-md hover:bg-emerald-700">
+            Salva Profilo
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- SCRIPT LOGIC -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, updateDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // Inizializzazione Firebase con configurazione automatica
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'oratorio-app-v1';
+    const firebaseConfig = typeof __firebase_config !== 'undefined' 
+      ? JSON.parse(__firebase_config) 
+      : {
+          // Fallback di sviluppo locale se non eseguito in ambiente ospitato
+          apiKey: "AIzaSyDemoKeyOnly",
+          authDomain: "demo-oratorio.firebaseapp.com",
+          projectId: "demo-oratorio",
+          storageBucket: "demo-oratorio.appspot.com",
+          messagingSenderId: "123456789",
+          appId: "1:123456789:web:demo"
+        };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // DATI INIZIALI DEMO PER IL PRIMO AVVIO SU CLOUD
+    const initialPeople = [
+      { id: '1', role: 'BAMBINO', faCatechismo: true, nome: 'Luca', cognome: 'Rossi', gruppo: '3° Elementare', telefono: '3331112223', allergie: 'Lattosio', uscite: '', note: '' },
+      { id: '2', role: 'BAMBINO', faCatechismo: false, nome: 'Giulia', cognome: 'Bianchi', gruppo: '3° Elementare', telefono: '3409988776', allergie: '', uscite: '', note: '' },
+      { id: '3', role: 'BAMBINO', faCatechismo: true, nome: 'Matteo', cognome: 'Verdi', gruppo: '4° Elementare', telefono: '3281234567', allergie: 'Noccioline', uscite: '', note: '' },
+      { id: '4', role: 'BAMBINO', faCatechismo: true, nome: 'Sara', cognome: 'Neri', gruppo: '1° Elementare', telefono: '3310001122', allergie: '', uscite: '', note: '' },
+      { id: '5', role: 'BAMBINO', faCatechismo: true, nome: 'Lorenzo', cognome: 'Ferrari', gruppo: '5° Elementare', telefono: '3385554433', allergie: '', uscite: '', note: '' },
+      { id: '6', role: 'ANIMATORE', faCatechismo: false, nome: 'Chiara', cognome: 'Moretti', gruppo: 'Staff', telefono: '3398877665', allergie: '', uscite: '', note: 'Resp. Giochi' }
+    ];
+
+    let people = [];
+    let attendanceData = {};
+    let generatedTeams = null;
+    let currentUser = null;
+
+    const datePicker = document.getElementById('datePicker');
+    const searchInput = document.getElementById('searchInput');
+    const entryFilter = document.getElementById('entryFilter');
+    const roleFilter = document.getElementById('roleFilter');
+    const groupFilter = document.getElementById('groupFilter');
+
+    // Imposta data odierna
+    datePicker.value = new Date().toISOString().split('T')[0];
+
+    // AUTENTICAZIONE E ASCOLTATORI CLOUD IN TEMPO REALE
+    async function initCloudSync() {
+      try {
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+          await signInAnonymously(auth);
+        }
+      } catch (err) {
+        console.warn("Autenticazione Cloud fallita, utilizzo modalità anonima fallback:", err);
+        try { await signInAnonymously(auth); } catch (e) { console.error(e); }
+      }
+
+      onAuthStateChanged(auth, (user) => {
+        if (!user) return;
+        currentUser = user;
+
+        // 1. Ascolto Persone/Iscritti dal Cloud (Percorso Pubblico Sincronizzato)
+        const peopleColRef = collection(db, 'artifacts', appId, 'public', 'data', 'persone');
+        onSnapshot(peopleColRef, (snapshot) => {
+          const cloudPeople = [];
+          snapshot.forEach(docSnap => {
+            cloudPeople.push({ id: docSnap.id, ...docSnap.data() });
+          });
+
+          // Se il Cloud è totalmente vuoto al primo avvio, carica i dati di demo iniziali
+          if (cloudPeople.length === 0 && snapshot.empty) {
+            seedInitialData();
+          } else {
+            people = cloudPeople;
+            people.sort((a, b) => (a.cognome || '').localeCompare(b.cognome || ''));
+            renderPeopleList();
+          }
+        }, (error) => {
+          console.error("Errore sincronizzazione Cloud persone:", error);
+        });
+
+        // 2. Ascolto Registro Presenze dal Cloud
+        const attendanceColRef = collection(db, 'artifacts', appId, 'public', 'data', 'presenze');
+        onSnapshot(attendanceColRef, (snapshot) => {
+          const newAttendance = {};
+          snapshot.forEach(docSnap => {
+            newAttendance[docSnap.id] = docSnap.data();
+          });
+          attendanceData = newAttendance;
+          renderPeopleList();
+          updateCounters();
+          updatePresentCountForTeams();
+        }, (error) => {
+          console.error("Errore sincronizzazione Cloud presenze:", error);
+        });
+      });
+    }
+
+    async function seedInitialData() {
+      for (const p of initialPeople) {
+        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'persone', p.id);
+        await setDoc(docRef, p);
+      }
+    }
+
+    // LISTENERS DI INTERFACCIA
+    datePicker.addEventListener('change', () => { renderPeopleList(); updateCounters(); updatePrintHeader(); });
+    searchInput.addEventListener('input', renderPeopleList);
+    entryFilter.addEventListener('change', renderPeopleList);
+    roleFilter.addEventListener('change', renderPeopleList);
+    groupFilter.addEventListener('change', renderPeopleList);
+
+    window.switchTab = function(tab) {
+      const secPres = document.getElementById('sectionPresenze');
+      const secSquad = document.getElementById('sectionSquadre');
+      const btnPres = document.getElementById('tabPresenzeBtn');
+      const btnSquad = document.getElementById('tabSquadreBtn');
+
+      if (tab === 'presenze') {
+        secPres.classList.remove('hidden');
+        secSquad.classList.add('hidden');
+        btnPres.className = "flex-1 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 bg-white text-indigo-600 shadow-sm";
+        btnSquad.className = "flex-1 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900";
+      } else {
+        secPres.classList.add('hidden');
+        secSquad.classList.remove('hidden');
+        btnSquad.className = "flex-1 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 bg-white text-indigo-600 shadow-sm";
+        btnPres.className = "flex-1 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900";
+        updatePresentCountForTeams();
+      }
+    };
+
+    window.openModalWithSearch = function() {
+      const q = searchInput.value.trim().split(' ');
+      openPersonModal(null, { nome: q[0] || '', cognome: q.slice(1).join(' ') || '' });
+    };
+
+    window.togglePersonModal = function(show) {
+      const modal = document.getElementById('personModal');
+      if (show) modal.classList.remove('hidden');
+      else modal.classList.add('hidden');
+    };
+
+    window.openPersonModal = function(id = null, preset = {}) {
+      const form = document.getElementById('personForm');
+      form.reset();
+      document.getElementById('editPersonId').value = id || '';
+      
+      if (id) {
+        const p = people.find(x => x.id === id);
+        if (p) {
+          form.querySelector(`input[name="role"][value="${p.role}"]`).checked = true;
+          document.getElementById('personFaCatechismo').checked = p.faCatechismo !== false;
+          document.getElementById('personNome').value = p.nome || '';
+          document.getElementById('personCognome').value = p.cognome || '';
+          document.getElementById('personGruppo').value = p.gruppo || '3° Elementare';
+          document.getElementById('personTelefono').value = p.telefono || '';
+          document.getElementById('personAllergie').value = p.allergie || '';
+          document.getElementById('personUscite').value = p.uscite || '';
+          document.getElementById('personNote').value = p.note || '';
+        }
+      } else {
+        document.getElementById('personFaCatechismo').checked = true;
+        if (preset.nome) document.getElementById('personNome').value = preset.nome;
+        if (preset.cognome) document.getElementById('personCognome').value = preset.cognome;
+      }
+      togglePersonModal(true);
+    };
+
+    window.handleSavePerson = async function(e) {
+      e.preventDefault();
+      if (!auth.currentUser) return;
+
+      const id = document.getElementById('editPersonId').value || Date.now().toString();
+      const role = document.querySelector('input[name="role"]:checked').value;
+      const faCatechismo = document.getElementById('personFaCatechismo').checked;
+      const nome = document.getElementById('personNome').value.trim();
+      const cognome = document.getElementById('personCognome').value.trim();
+      const gruppo = document.getElementById('personGruppo').value;
+      const telefono = document.getElementById('personTelefono').value.trim();
+      const allergie = document.getElementById('personAllergie').value.trim();
+      const uscite = document.getElementById('personUscite').value.trim();
+      const note = document.getElementById('personNote').value.trim();
+
+      if (!nome || !cognome) return;
+
+      const personData = { id, role, faCatechismo, nome, cognome, gruppo, telefono, allergie, uscite, note };
+
+      // Salvataggio istantaneo su Cloud Firestore
+      const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'persone', id);
+      await setDoc(docRef, personData, { merge: true });
+
+      togglePersonModal(false);
+    };
+
+    window.toggleAttendance = async function(personId, type) {
+      if (!auth.currentUser) return;
+      const selectedDate = datePicker.value;
+      if (!selectedDate) return;
+
+      const currentDay = attendanceData[selectedDate] || {};
+      const currentPersonData = currentDay[personId] || { catechismo: false, oratorio: false, messa: false };
+      
+      const updatedValue = !currentPersonData[type];
+      
+      // Aggiornamento sul Cloud Firestore
+      const dateDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'presenze', selectedDate);
+      await setDoc(dateDocRef, {
+        [personId]: {
+          ...currentPersonData,
+          [type]: updatedValue
+        }
+      }, { merge: true });
+    };
+
+    function updateCounters() {
+      const selectedDate = datePicker.value;
+      const dayData = attendanceData[selectedDate] || {};
+      let c = 0, o = 0, m = 0;
+      Object.values(dayData).forEach(p => {
+        if (p.catechismo) c++;
+        if (p.oratorio) o++;
+        if (p.messa) m++;
+      });
+      document.getElementById('countCatechismo').textContent = c;
+      document.getElementById('countOratorio').textContent = o;
+      document.getElementById('countMessa').textContent = m;
+    }
+
+    function updatePresentCountForTeams() {
+      const selectedDate = datePicker.value;
+      const dayData = attendanceData[selectedDate] || {};
+      const count = Object.values(dayData).filter(p => p.oratorio || p.catechismo).length;
+      document.getElementById('presentCountTeams').textContent = count;
+    }
+
+    function renderPeopleList() {
+      const container = document.getElementById('peopleList');
+      const emptyState = document.getElementById('emptyState');
+      const search = searchInput.value.toLowerCase().trim();
+      const entry = entryFilter.value;
+      const role = roleFilter.value;
+      const group = groupFilter.value;
+      const selectedDate = datePicker.value;
+      const dayData = attendanceData[selectedDate] || {};
+
+      const filtered = people.filter(p => {
+        const nameMatch = (p.nome + ' ' + p.cognome).toLowerCase().includes(search) || (p.cognome + ' ' + p.nome).toLowerCase().includes(search);
+        
+        let entryMatch = true;
+        if (entry === 'SOLO_CAT') entryMatch = p.faCatechismo === true;
+        else if (entry === 'NO_CAT') entryMatch = p.faCatechismo === false;
+
+        const roleMatch = (role === 'ALL' || p.role === role);
+        const groupMatch = (group === 'ALL' || p.gruppo === group);
+        return nameMatch && entryMatch && roleMatch && groupMatch;
+      });
+
+      container.innerHTML = '';
+
+      if (filtered.length === 0) {
+        emptyState.classList.remove('hidden');
+        document.getElementById('quickAddBtnText').textContent = search ? `Crea profilo per "${search}"` : "Crea nuovo profilo";
+        return;
+      } else {
+        emptyState.classList.add('hidden');
+      }
+
+      filtered.forEach(p => {
+        const pres = dayData[p.id] || { catechismo: false, oratorio: false, messa: false };
+        const card = document.createElement('div');
+        card.className = "bg-white rounded-2xl p-3.5 shadow-sm border border-slate-200/80 transition-all hover:shadow-md";
+
+        let entryLabel = p.faCatechismo 
+          ? '<span class="bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-bold px-2 py-0.5 rounded-md inline-flex items-center gap-1"><i class="fa-solid fa-book-bible"></i>Catechismo</span>'
+          : '<span class="bg-slate-100 text-slate-600 border border-slate-200 text-[10px] font-bold px-2 py-0.5 rounded-md">Solo Oratorio</span>';
+
+        card.innerHTML = `
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+            <div class="flex items-start gap-3 min-w-0">
+              <div class="w-10 h-10 rounded-full ${p.role === 'ANIMATORE' ? 'bg-purple-100 text-purple-700' : 'bg-indigo-100 text-indigo-700'} font-bold flex items-center justify-center text-xs shrink-0 mt-0.5 border border-slate-200/60">
+                ${p.nome ? p.nome.charAt(0) : ''}${p.cognome ? p.cognome.charAt(0) : ''}
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="flex flex-wrap items-center gap-2">
+                  <h4 class="font-bold text-slate-800 text-sm truncate">${p.cognome || ''} ${p.nome || ''}</h4>
+                  ${entryLabel}
+                </div>
+
+                <div class="flex flex-wrap items-center gap-1.5 mt-1.5">
+                  <span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md font-semibold">${p.gruppo}</span>
+                  ${p.allergie ? `<span class="text-[10px] bg-rose-50 text-rose-600 border border-rose-200/80 px-2 py-0.5 rounded-md font-bold inline-flex items-center gap-1"><i class="fa-solid fa-triangle-exclamation"></i> ${p.allergie}</span>` : ''}
+                  ${p.telefono ? `<a href="tel:${p.telefono}" class="text-[10px] bg-slate-50 border border-slate-200 text-indigo-600 hover:text-indigo-800 px-2 py-0.5 rounded-md font-medium inline-flex items-center gap-1"><i class="fa-solid fa-phone"></i> ${p.telefono}</a>` : ''}
+                </div>
+
+                ${(p.uscite || p.note) ? `
+                  <div class="mt-2 text-[11px] space-y-1 pt-1.5 border-t border-slate-100">
+                    ${p.uscite ? `
+                      <div class="text-amber-800 bg-amber-50/80 border border-amber-200/80 px-2 py-1 rounded-lg flex items-start gap-1.5">
+                        <i class="fa-solid fa-clock text-amber-600 text-xs mt-0.5 shrink-0"></i>
+                        <span><strong class="font-semibold">Uscita/Delega:</strong> ${p.uscite}</span>
+                      </div>
+                    ` : ''}
+                    ${p.note ? `
+                      <div class="text-slate-600 bg-slate-50 border border-slate-200/60 px-2 py-1 rounded-lg flex items-start gap-1.5">
+                        <i class="fa-solid fa-note-sticky text-slate-400 text-xs mt-0.5 shrink-0"></i>
+                        <span><strong class="font-semibold">Note:</strong> ${p.note}</span>
+                      </div>
+                    ` : ''}
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between lg:justify-end gap-1.5 pt-2.5 lg:pt-0 border-t lg:border-0 border-slate-100 shrink-0">
+              <button onclick="toggleAttendance('${p.id}', 'catechismo')" class="flex-1 lg:flex-none px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1 border transition-all ${pres.catechismo ? 'bg-blue-600 text-white border-blue-600 shadow-sm' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'}">
+                <i class="fa-solid ${pres.catechismo ? 'fa-square-check' : 'fa-square'}"></i> Catechismo
+              </button>
+              <button onclick="toggleAttendance('${p.id}', 'oratorio')" class="flex-1 lg:flex-none px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1 border transition-all ${pres.oratorio ? 'bg-amber-500 text-white border-amber-500 shadow-sm' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'}">
+                <i class="fa-solid ${pres.oratorio ? 'fa-square-check' : 'fa-square'}"></i> Oratorio
+              </button>
+              <button onclick="toggleAttendance('${p.id}', 'messa')" class="flex-1 lg:flex-none px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1 border transition-all ${pres.messa ? 'bg-purple-600 text-white border-purple-600 shadow-sm' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'}">
+                <i class="fa-solid ${pres.messa ? 'fa-square-check' : 'fa-square'}"></i> Messa
+              </button>
+              <button onclick="openPersonModal('${p.id}')" class="text-slate-400 hover:text-indigo-600 p-2 rounded-xl border border-transparent hover:border-slate-200 hover:bg-slate-50 no-print transition-all ml-1" title="Modifica Profilo">
+                <i class="fa-solid fa-pen-to-square text-sm"></i>
+              </button>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // LOGICA DI GENERAZIONE SQUADRE
+    window.generateTeams = function() {
+      const selectedDate = datePicker.value;
+      const dayData = attendanceData[selectedDate] || {};
+      const incOra = document.getElementById('includeOratorio').checked;
+      const incCat = document.getElementById('includeCatechismo').checked;
+      const teamCount = parseInt(document.getElementById('teamCountSlider').value);
+      const strategy = document.getElementById('teamStrategy').value;
+
+      const presentKids = people.filter(p => {
+        if (p.role !== 'BAMBINO') return false;
+        const pres = dayData[p.id];
+        if (!pres) return false;
+        return (incOra && pres.oratorio) || (incCat && pres.catechismo);
+      });
+
+      if (presentKids.length === 0) {
+        alert("Nessun bambino risulta presente per le opzioni selezionate oggi!");
+        return;
+      }
+
+      const teams = Array.from({ length: teamCount }, (_, i) => ({
+        id: i + 1,
+        name: `Squadra ${i + 1}`,
+        members: []
+      }));
+
+      if (strategy === 'EQUILIBRATA') {
+        const byGroup = {};
+        presentKids.forEach(k => {
+          if (!byGroup[k.gruppo]) byGroup[k.gruppo] = [];
+          byGroup[k.gruppo].push(k);
+        });
+
+        let teamPointer = 0;
+        Object.keys(byGroup).sort().forEach(groupName => {
+          const groupKids = byGroup[groupName].sort(() => Math.random() - 0.5);
+          groupKids.forEach(kid => {
+            teams[teamPointer].members.push(kid);
+            teamPointer = (teamPointer + 1) % teamCount;
+          });
+        });
+
+      } else if (strategy === 'OMOGENEA') {
+        const sortedKids = [...presentKids].sort((a, b) => a.gruppo.localeCompare(b.gruppo));
+        sortedKids.forEach((kid, idx) => {
+          const targetTeam = Math.floor((idx / sortedKids.length) * teamCount);
+          teams[targetTeam].members.push(kid);
+        });
+
+      } else {
+        const shuffled = [...presentKids].sort(() => Math.random() - 0.5);
+        shuffled.forEach((kid, idx) => {
+          teams[idx % teamCount].members.push(kid);
+        });
+      }
+
+      generatedTeams = teams;
+      renderTeamsOutput(teams);
+    };
+
+    function renderTeamsOutput(teams) {
+      const container = document.getElementById('teamsOutputContainer');
+      const colors = ['border-blue-500 bg-blue-50/30', 'border-emerald-500 bg-emerald-50/30', 'border-amber-500 bg-amber-50/30', 'border-purple-500 bg-purple-50/30', 'border-rose-500 bg-rose-50/30', 'border-indigo-500 bg-indigo-50/30'];
+
+      let html = `
+        <div class="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200">
+          <h3 class="font-bold text-slate-800 text-sm">Squadre Generate (${teams.reduce((a,b)=>a+b.members.length, 0)} ragazzi)</h3>
+          <button onclick="copyTeamsToClipboard()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-sm">
+            <i class="fa-solid fa-copy"></i> Copia per WhatsApp
+          </button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      `;
+
+      teams.forEach((t, i) => {
+        const colorClass = colors[i % colors.length];
+        html += `
+          <div class="bg-white rounded-2xl p-4 border-l-4 shadow-sm space-y-2 ${colorClass}">
+            <div class="flex justify-between items-center border-b pb-2">
+              <h4 class="font-extrabold text-slate-800 text-base">${t.name}</h4>
+              <span class="text-xs font-bold bg-white px-2.5 py-1 rounded-lg border border-slate-200 text-slate-600">${t.members.length} componenti</span>
+            </div>
+            <ul class="text-xs space-y-1.5 divide-y divide-slate-100">
+        `;
+
+        t.members.forEach(m => {
+          html += `
+            <li class="pt-1.5 flex justify-between items-center">
+              <span class="font-semibold text-slate-700">${m.cognome} ${m.nome}</span>
+              <span class="text-[10px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">${m.gruppo}</span>
+            </li>
+          `;
+        });
+
+        html += `</ul></div>`;
+      });
+
+      html += `</div>`;
+      container.innerHTML = html;
+    }
+
+    window.copyTeamsToClipboard = function() {
+      if (!generatedTeams) return;
+      let text = `🏆 *SQUADRE ORATORIO (${datePicker.value})* 🏆\n\n`;
+      generatedTeams.forEach(t => {
+        text += `🔴 *${t.name.toUpperCase()}* (${t.members.length}):\n`;
+        t.members.forEach(m => {
+          text += `• ${m.cognome} ${m.nome} (${m.gruppo})\n`;
+        });
+        text += `\n`;
+      });
+
+      const tempInput = document.createElement("textarea");
+      tempInput.value = text;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      document.execCommand("copy");
+      document.body.removeChild(tempInput);
+      alert("Elenco squadre copiato! Puoi incollarlo direttamente su WhatsApp.");
+    };
+
+    function updatePrintHeader() {
+      const parts = datePicker.value.split('-');
+      document.getElementById('printDateText').textContent = `Data: ${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+
+    window.exportCSV = function() {
+      const selectedDate = datePicker.value;
+      const dayData = attendanceData[selectedDate] || {};
+      let csv = "data:text/csv;charset=utf-8,\uFEFF";
+      csv += "Ruolo;Cognome;Nome;Iscritto Catechismo;Gruppo;Presenza Catechismo;Presenza Oratorio;Presenza Messa;Telefono;Allergie;Uscite/Deleghe;Note\n";
+
+      people.forEach(p => {
+        const pres = dayData[p.id] || { catechismo: false, oratorio: false, messa: false };
+        csv += `"${p.role}";"${p.cognome || ''}";"${p.nome || ''}";"${p.faCatechismo ? 'SI' : 'NO'}";"${p.gruppo || ''}";"${pres.catechismo ? 'SI' : 'NO'}";"${pres.oratorio ? 'SI' : 'NO'}";"${pres.messa ? 'SI' : 'NO'}";"${p.telefono || ''}";"${p.allergie || ''}";"${p.uscite || ''}";"${p.note || ''}"\n`;
+      });
+
+      const link = document.createElement("a");
+      link.setAttribute("href", encodeURI(csv));
+      link.setAttribute("download", `presenze_${selectedDate}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+
+    window.onload = function() {
+      updatePrintHeader();
+      initCloudSync();
+    };
+  </script>
+</body>
+</html>
