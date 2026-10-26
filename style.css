@@ -277,7 +277,8 @@ attendance-checkbox {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5); /* Sfondo scuro semitrasparente */
+    background-color: rgba(0, 0, 0, 0.5);
+    /* Sfondo scuro semitrasparente */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -300,6 +301,7 @@ attendance-checkbox {
         transform: scale(0.95);
         opacity: 0;
     }
+
     to {
         transform: scale(1);
         opacity: 1;
@@ -418,7 +420,7 @@ attendance-checkbox {
     padding: 20px;
     border-radius: 12px;
     border: 1px solid #e2e8f0;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .section-title {
@@ -451,7 +453,7 @@ attendance-checkbox {
     border-radius: 12px;
     border: 1px solid #e2e8f0;
     overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .squadra-header {
@@ -463,8 +465,13 @@ attendance-checkbox {
 }
 
 /* Colori distintivi per le squadre */
-.squadra-rossa { background-color: #ef4444; }
-.squadra-blu { background-color: #3b82f6; }
+.squadra-rossa {
+    background-color: #ef4444;
+}
+
+.squadra-blu {
+    background-color: #3b82f6;
+}
 
 .squadra-header h3 {
     font-size: 1rem;
@@ -509,4 +516,20 @@ attendance-checkbox {
     .controls-grid {
         flex-direction: row;
     }
+}
+
+.squadra-verde {
+    background-color: #10b981;
+}
+
+.squadra-gialla {
+    background-color: #f59e0b;
+}
+
+.squadra-viola {
+    background-color: #8b5cf6;
+}
+
+.squadra-arancione {
+    background-color: #f97316;
 }
