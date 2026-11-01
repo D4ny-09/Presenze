@@ -1,0 +1,2025 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro Elettronico • Appello di Classe</title>
+    <!-- Icone FontAwesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Supabase JS Client UMD -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Configurazione ambiente -->
+    <script src="env.js"></script>
+
+    <style>
+        /* =========================================================
+           REGISTRO ELETTRONICO SCOLASTICO - TEMA PROFESSIONALE
+           Ispirato ai migliori registri elettronici scolastici italiani
+           ========================================================= */
+        :root {
+            --primary: #1e3a8a;          /* Blu Istituzionale Ministeriale/Scolastico */
+            --primary-dark: #0f172a;     /* Navy Scuro */
+            --primary-light: #3b82f6;    /* Blu Elettrico */
+            --primary-subtle: #eff6ff;   /* Sfondo azzurrino leggerissimo */
+            --surface: #ffffff;
+            --background: #f8fafc;
+            --border: #e2e8f0;
+            --border-strong: #cbd5e1;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --success: #16a34a;          /* Verde Presente */
+            --success-bg: #dcfce7;
+            --danger: #dc2626;           /* Rosso Assente */
+            --danger-bg: #fee2e2;
+            --warning: #d97706;          /* Arancio Oratorio/Uscita */
+            --warning-bg: #fef3c7;
+            --purple: #7e22ce;           /* Viola Messa */
+            --purple-bg: #f3e8ff;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.06);
+            --shadow-lg: 0 10px 25px rgba(15, 23, 42, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            background-color: var(--background);
+            color: var(--text-main);
+            line-height: 1.5;
+            padding-bottom: 80px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* BARRA SUPERIORE ISTITUZIONALE */
+        .register-topbar {
+            background-color: var(--primary-dark);
+            color: #ffffff;
+            border-bottom: 3px solid var(--primary-light);
+            padding: 12px 24px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .topbar-container {
+            max-width: 1240px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .brand-section {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .crest-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            border: 2px solid rgba(255, 255, 255, 0.25);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.35rem;
+            color: #ffffff;
+            box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.4);
+        }
+
+        .brand-text h1 {
+            font-size: 1.15rem;
+            font-weight: 800;
+            letter-spacing: -0.2px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .brand-text p {
+            font-size: 0.78rem;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        .system-pill {
+            background-color: #334155;
+            color: #e2e8f0;
+            font-size: 0.68rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-topbar {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 7px 14px;
+            border-radius: var(--radius-sm);
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn-topbar:hover {
+            background-color: #ffffff;
+            color: var(--primary-dark);
+            border-color: #ffffff;
+        }
+
+        .btn-topbar-primary {
+            background-color: var(--primary-light);
+            border-color: #60a5fa;
+        }
+
+        .btn-topbar-primary:hover {
+            background-color: #2563eb;
+            color: #ffffff;
+        }
+
+        /* BARRA SOTTOSTANTE: BREADCRUMB & DATA */
+        .register-subbar {
+            background-color: #ffffff;
+            border-bottom: 1px solid var(--border);
+            padding: 10px 24px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .subbar-container {
+            max-width: 1240px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .breadcrumb-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.86rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .breadcrumb-box a {
+            color: var(--primary-light);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .breadcrumb-box a:hover {
+            text-decoration: underline;
+        }
+
+        .breadcrumb-sep {
+            color: var(--border-strong);
+        }
+
+        .breadcrumb-current {
+            color: var(--text-main);
+            font-weight: 800;
+        }
+
+        .date-picker-box {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background-color: var(--background);
+            padding: 4px 8px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+        }
+
+        .date-btn {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 5px 9px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .date-btn:hover {
+            background-color: var(--primary-subtle);
+            border-color: var(--primary-light);
+            color: var(--primary);
+        }
+
+        .date-input {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-main);
+            outline: none;
+        }
+
+        .date-input:focus {
+            border-color: var(--primary-light);
+        }
+
+        /* CONTENITORE PRINCIPALE */
+        .register-main {
+            max-width: 1240px;
+            margin: 20px auto;
+            padding: 0 16px;
+        }
+
+        /* HEADER DELLA CLASSE & STRISCIA STATISTICHE SCOLASTICHE */
+        .class-dashboard-card {
+            background: #ffffff;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            padding: 20px 24px;
+            margin-bottom: 20px;
+        }
+
+        .class-title-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+
+        .class-heading {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .class-badge-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--primary-subtle);
+            color: var(--primary);
+            border: 1px solid #bfdbfe;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+        }
+
+        .class-heading h2 {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -0.3px;
+        }
+
+        .class-heading p {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* GRIGLIA METRICHE REGISTRO (Stile Registro Elettronico DidUP / Spaggiari) */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .metric-box {
+            background-color: var(--background);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 12px 14px;
+            text-align: center;
+            transition: all 0.15s ease;
+        }
+
+        .metric-box:hover {
+            border-color: var(--border-strong);
+        }
+
+        .metric-box.tot {
+            border-left: 4px solid var(--primary-light);
+        }
+
+        .metric-box.pres {
+            border-left: 4px solid var(--success);
+            background-color: #f0fdf4;
+        }
+
+        .metric-box.ass {
+            border-left: 4px solid var(--danger);
+            background-color: #fef2f2;
+        }
+
+        .metric-box.ora {
+            border-left: 4px solid var(--warning);
+            background-color: #fffbeb;
+        }
+
+        .metric-box.mes {
+            border-left: 4px solid var(--purple);
+            background-color: #faf5ff;
+        }
+
+        .metric-num {
+            font-size: 1.55rem;
+            font-weight: 900;
+            line-height: 1.1;
+        }
+
+        .metric-lbl {
+            font-size: 0.72rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            color: var(--text-muted);
+            margin-top: 3px;
+            display: block;
+        }
+
+        /* ACTION BAR: STRUMENTI APPELLO RAPIDO */
+        .register-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-search {
+            position: relative;
+            min-width: 280px;
+        }
+
+        .toolbar-search i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 9px 12px 9px 34px;
+            background-color: #ffffff;
+            border: 1px solid var(--border-strong);
+            border-radius: var(--radius-sm);
+            font-size: 0.88rem;
+            color: var(--text-main);
+            outline: none;
+            transition: all 0.15s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        .btn-action {
+            padding: 9px 14px;
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            transition: all 0.15s ease;
+        }
+
+        .btn-action-success {
+            background-color: var(--success);
+            color: #ffffff;
+        }
+
+        .btn-action-success:hover {
+            background-color: #15803d;
+        }
+
+        .btn-action-warning {
+            background-color: var(--warning);
+            color: #ffffff;
+        }
+
+        .btn-action-warning:hover {
+            background-color: #b45309;
+        }
+
+        .btn-action-neutral {
+            background-color: #ffffff;
+            color: var(--text-main);
+            border: 1px solid var(--border-strong);
+        }
+
+        .btn-action-neutral:hover {
+            background-color: var(--background);
+        }
+
+        /* TABELLA REGISTRO ELETTRONICO UFFICIALE */
+        .register-table-wrapper {
+            background: #ffffff;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+
+        .register-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.88rem;
+        }
+
+        .register-table thead {
+            background-color: #f1f5f9;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .register-table th {
+            padding: 12px 14px;
+            font-size: 0.74rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .register-table tbody tr {
+            border-bottom: 1px solid var(--border);
+            transition: background-color 0.15s ease;
+        }
+
+        .register-table tbody tr:hover {
+            background-color: #f8fafc;
+        }
+
+        .register-table tbody tr.row-present {
+            background-color: #f0fdf4;
+        }
+
+        .register-table tbody tr.row-absent {
+            background-color: #fef2f2;
+        }
+
+        .register-table td {
+            padding: 12px 14px;
+            vertical-align: middle;
+        }
+
+        /* CELLE TABELLA */
+        .td-num {
+            font-weight: 800;
+            color: var(--text-muted);
+            width: 40px;
+            text-align: center;
+        }
+
+        .student-cell {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 220px;
+        }
+
+        .student-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: #e2e8f0;
+            color: var(--primary);
+            font-weight: 800;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            border: 1px solid var(--border);
+        }
+
+        .student-names {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .student-full-name {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .student-meta {
+            font-size: 0.74rem;
+            color: var(--text-muted);
+        }
+
+        /* TASTI APPELLO REGISTRO (P / A SWITCH) */
+        .pa-switcher {
+            display: inline-flex;
+            background-color: #e2e8f0;
+            border-radius: 8px;
+            padding: 3px;
+            gap: 2px;
+        }
+
+        .pa-btn {
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 0.82rem;
+            font-weight: 800;
+            border: none;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            color: #64748b;
+            background: transparent;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .pa-btn.active-p {
+            background-color: var(--success);
+            color: #ffffff;
+            box-shadow: 0 2px 6px rgba(22, 163, 74, 0.3);
+        }
+
+        .pa-btn.active-a {
+            background-color: var(--danger);
+            color: #ffffff;
+            box-shadow: 0 2px 6px rgba(220, 38, 38, 0.3);
+        }
+
+        /* PILLOLE TOGGLE ATTIVITÀ */
+        .pill-toggle {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            border: 1px solid var(--border-strong);
+            background-color: #ffffff;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+
+        .pill-toggle:hover {
+            background-color: var(--background);
+        }
+
+        .pill-toggle.active-ora {
+            background-color: var(--warning-bg);
+            border-color: #fcd34d;
+            color: #92400e;
+        }
+
+        .pill-toggle.active-mes {
+            background-color: var(--purple-bg);
+            border-color: #d8b4fe;
+            color: #6b21a8;
+        }
+
+        /* ALERT NOTE E ALLERGIE IN TABELLA */
+        .alerts-cluster {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            max-width: 240px;
+        }
+
+        .table-alert {
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 3px 7px;
+            border-radius: 5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            line-height: 1.2;
+        }
+
+        .table-alert.allergy {
+            background-color: var(--danger-bg);
+            color: #b91c1c;
+            border: 1px solid #fca5a5;
+        }
+
+        .table-alert.delega {
+            background-color: var(--warning-bg);
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .table-alert.note {
+            background-color: #f1f5f9;
+            color: #475569;
+            border: 1px solid var(--border);
+        }
+
+        .btn-call {
+            padding: 6px 10px;
+            border-radius: 6px;
+            background-color: #ecfdf5;
+            color: #059669;
+            border: 1px solid #a7f3d0;
+            font-size: 0.76rem;
+            font-weight: 700;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+        }
+
+        .btn-call:hover {
+            background-color: #10b981;
+            color: #ffffff;
+        }
+
+        .btn-table-icon {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            border-radius: 6px;
+            padding: 6px 9px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn-table-icon:hover {
+            color: var(--primary-light);
+            border-color: var(--primary-light);
+            background-color: var(--primary-subtle);
+        }
+
+        /* GIORNALE DI CLASSE / NOTE LEZIONE */
+        .journal-box {
+            background: #ffffff;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            padding: 20px 24px;
+        }
+
+        .journal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .journal-title {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .journal-textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-strong);
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 0.9rem;
+            color: var(--text-main);
+            outline: none;
+            resize: vertical;
+            background-color: #fafbfc;
+            transition: all 0.15s ease;
+        }
+
+        .journal-textarea:focus {
+            background-color: #ffffff;
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        /* MODALE POPUP */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 16px;
+        }
+
+        .modal-container {
+            background: #ffffff;
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 520px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            padding: 24px;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 18px;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .modal-close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        .modal-form {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #334155;
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            padding: 9px 12px;
+            border: 1px solid var(--border-strong);
+            border-radius: var(--radius-sm);
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 10px;
+            padding-top: 14px;
+            border-top: 1px solid var(--border);
+        }
+
+        .btn-modal-primary {
+            background-color: var(--primary);
+            color: #ffffff;
+            border: none;
+            padding: 9px 18px;
+            border-radius: var(--radius-sm);
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .btn-modal-secondary {
+            background-color: #f1f5f9;
+            color: #475569;
+            border: 1px solid var(--border);
+            padding: 9px 16px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-modal-danger {
+            background-color: var(--danger);
+            color: #ffffff;
+            border: none;
+            padding: 9px 16px;
+            border-radius: var(--radius-sm);
+            font-weight: 700;
+            cursor: pointer;
+            margin-right: auto;
+        }
+
+        /* TOAST NOTIFICA */
+        .toast-msg {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--primary-dark);
+            color: #ffffff;
+            padding: 12px 22px;
+            border-radius: var(--radius-md);
+            font-size: 0.9rem;
+            font-weight: 700;
+            box-shadow: var(--shadow-lg);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: toastIn 0.25s ease-out;
+        }
+
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, 15px);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, 0);
+            }
+        }
+
+        /* RESPONSIVE PER SMARTPHONE: TRASFORMAZIONE TABELLA IN CARDS TOUCH */
+        @media (max-width: 820px) {
+            .register-table thead {
+                display: none;
+            }
+
+            .register-table,
+            .register-table tbody,
+            .register-table tr,
+            .register-table td {
+                display: block;
+                width: 100%;
+            }
+
+            .register-table tbody tr {
+                padding: 14px;
+                border-bottom: 2px solid var(--border);
+                position: relative;
+            }
+
+            .register-table td {
+                padding: 6px 0;
+            }
+
+            .td-num {
+                position: absolute;
+                top: 14px;
+                right: 14px;
+                width: auto;
+                background-color: #e2e8f0;
+                padding: 2px 8px;
+                border-radius: 4px;
+                font-size: 0.75rem;
+            }
+
+            .row-actions-mobile {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                flex-wrap: wrap;
+                margin-top: 8px;
+                padding-top: 8px;
+                border-top: 1px dashed var(--border);
+            }
+        }
+
+        @media print {
+            .register-topbar,
+            .register-subbar,
+            .register-toolbar,
+            .btn-table-icon,
+            .btn-call,
+            .journal-box,
+            .modal-overlay {
+                display: none !important;
+            }
+
+            body {
+                background: white;
+                color: black;
+                padding: 0;
+            }
+
+            .register-main {
+                max-width: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            .register-table {
+                font-size: 10pt;
+            }
+
+            .register-table th,
+            .register-table td {
+                border: 1px solid #94a3b8;
+                padding: 6px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ========================================================= -->
+    <!-- BARRA SUPERIORE ISTITUZIONALE                             -->
+    <!-- ========================================================= -->
+    <header class="register-topbar">
+        <div class="topbar-container">
+            <div class="brand-section">
+                <div class="crest-icon">
+                    <i class="fa-solid fa-school"></i>
+                </div>
+                <div class="brand-text">
+                    <h1>
+                        <span>REGISTRO ELETTRONICO</span>
+                        <span class="system-pill">Oratorio & Catechismo</span>
+                    </h1>
+                    <p>Portale Docenti • Gestione Didattica & Presenze</p>
+                </div>
+            </div>
+
+            <div class="topbar-actions">
+                <!-- Stato Cloud -->
+                <button id="btnCloudStatus" onclick="openSupabasePrompt()" class="btn-topbar" title="Verifica o imposta credenziali Supabase Cloud">
+                    <i class="fa-solid fa-cloud"></i>
+                    <span id="cloudBadgeText">Cloud...</span>
+                </button>
+
+                <!-- Passa alla Parrocchia -->
+                <a href="index.html" class="btn-topbar btn-topbar-primary" title="Vai al cruscotto generale della Parrocchia">
+                    <i class="fa-solid fa-church"></i>
+                    <span>Segreteria Parrocchia</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- ========================================================= -->
+    <!-- SOTTOBARRA: BREADCRUMB & DATA LEZIONE                     -->
+    <!-- ========================================================= -->
+    <div class="register-subbar">
+        <div class="subbar-container">
+            <div class="breadcrumb-box">
+                <a href="catechiste.html" title="Torna all'elenco di tutte le classi">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>Quadro Classi</span>
+                </a>
+                <span class="breadcrumb-sep">/</span>
+                <span class="breadcrumb-current" id="breadcrumbClassName">Classe 3ª Elementare</span>
+            </div>
+
+            <!-- Selettore Data e Navigazione -->
+            <div class="date-picker-box">
+                <button id="btnPrevDay" class="date-btn" title="Giorno precedente">◀</button>
+                <button id="btnToday" class="date-btn" title="Vai a Oggi">Oggi</button>
+                <input type="date" id="datePicker" class="date-input">
+                <button id="btnNextDay" class="date-btn" title="Giorno successivo">▶</button>
+                <span id="formattedDateText" style="font-size:0.82rem; font-weight:700; color:#334155; margin-left:6px;"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- CONTENUTO PRINCIPALE DEL REGISTRO DI CLASSE               -->
+    <!-- ========================================================= -->
+    <main class="register-main">
+
+        <!-- HEADER DELLA CLASSE & STRISCIA STATISTICHE -->
+        <section class="class-dashboard-card">
+            <div class="class-title-row">
+                <div class="class-heading">
+                    <div class="class-badge-icon">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
+                    <div>
+                        <h2 id="activeClassName">Classe 3ª Elementare</h2>
+                        <p id="activeClassSummary">Registro di Classe e Giornale del Professore • Anno Pastorale 2026/2027</p>
+                    </div>
+                </div>
+
+                <div style="font-size: 0.82rem; color: var(--text-muted); font-weight: 600;">
+                    <i class="fa-solid fa-shield-halved" style="color: var(--success);"></i>
+                    <span>Registro Convalidato & Sincronizzato</span>
+                </div>
+            </div>
+
+            <!-- Griglia Metriche Ufficiali -->
+            <div class="metrics-grid">
+                <div class="metric-box tot">
+                    <div id="statTotal" class="metric-num">0</div>
+                    <span class="metric-lbl">Alunni Iscritti</span>
+                </div>
+
+                <div class="metric-box pres">
+                    <div id="statPresentCat" class="metric-num" style="color: var(--success);">0</div>
+                    <span class="metric-lbl">Presenti (P)</span>
+                </div>
+
+                <div class="metric-box ass">
+                    <div id="statAbsentCat" class="metric-num" style="color: var(--danger);">0</div>
+                    <span class="metric-lbl">Assenti (A)</span>
+                </div>
+
+                <div class="metric-box ora">
+                    <div id="statInOratorio" class="metric-num" style="color: var(--warning);">0</div>
+                    <span class="metric-lbl">In Oratorio</span>
+                </div>
+
+                <div class="metric-box mes">
+                    <div id="statMessa" class="metric-num" style="color: var(--purple);">0</div>
+                    <span class="metric-lbl">S. Messa</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- TOOLBAR: AZIONI APPELLO RAPIDO & RICERCA -->
+        <div class="register-toolbar">
+            <div class="toolbar-left">
+                <button id="btnAllPresentCat" class="btn-action btn-action-success" title="Segna tutti gli alunni della classe come presenti">
+                    <i class="fa-solid fa-check-double"></i>
+                    <span>Appello Rapido: Tutti Presenti</span>
+                </button>
+
+                <button id="btnPassToOratorio" class="btn-action btn-action-warning" title="Segna che tutti i presenti si fermano all'oratorio">
+                    <i class="fa-solid fa-volleyball"></i>
+                    <span>Tutti in Oratorio</span>
+                </button>
+
+                <button id="btnAddNewKid" class="btn-action btn-action-neutral" title="Iscrivi un nuovo alunno a questa classe">
+                    <i class="fa-solid fa-user-plus"></i>
+                    <span>Nuovo Alunno</span>
+                </button>
+
+                <button onclick="window.print()" class="btn-action btn-action-neutral" title="Stampa il foglio registro ufficiale">
+                    <i class="fa-solid fa-print"></i>
+                    <span>Stampa Registro</span>
+                </button>
+            </div>
+
+            <div class="toolbar-search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="classSearchInput" class="search-input" placeholder="Cerca alunno per cognome, nome, note...">
+            </div>
+        </div>
+
+        <!-- TABELLA REGISTRO DI CLASSE -->
+        <section class="register-table-wrapper">
+            <table class="register-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40px; text-align: center;">N.</th>
+                        <th>Cognome e Nome Alunno</th>
+                        <th style="text-align: center;">Appello Catechismo</th>
+                        <th style="text-align: center;">Oratorio / Doposcuola</th>
+                        <th style="text-align: center;">S. Messa</th>
+                        <th>Segnalazioni & Allergie</th>
+                        <th>Contatto Famiglia</th>
+                        <th style="width: 50px; text-align: center;">Azioni</th>
+                    </tr>
+                </thead>
+                <tbody id="kidsTableBody">
+                    <!-- Popolato dinamicamente -->
+                </tbody>
+            </table>
+        </section>
+
+        <!-- GIORNALE DI CLASSE / NOTE LEZIONE -->
+        <section class="journal-box">
+            <div class="journal-header">
+                <h3 class="journal-title">
+                    <i class="fa-solid fa-book-open-reader" style="color: var(--primary-light);"></i>
+                    <span>Giornale di Classe • Argomento della Lezione e Compiti</span>
+                </h3>
+                <span id="noteSavedStatus" style="font-size: 0.8rem; font-weight: 700; color: var(--success);"></span>
+            </div>
+            <textarea id="lessonNotesInput" class="journal-textarea" rows="3" placeholder="Scrivi qui l'argomento trattato oggi (es. Vangelo della domenica spiegato, brano letto, riflessione svolta) e le note/compiti per la prossima lezione..."></textarea>
+        </section>
+
+    </main>
+
+    <!-- ========================================================= -->
+    <!-- MODALE SCHEDA ALUNNO                                      -->
+    <!-- ========================================================= -->
+    <div id="kidModal" class="modal-overlay hidden">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 id="modalTitle" class="modal-title">Scheda Alunno</h3>
+                <button type="button" id="closeModalBtn" class="modal-close-btn">&times;</button>
+            </div>
+
+            <form id="kidForm" class="modal-form">
+                <input type="hidden" id="kidId" name="id" value="">
+
+                <div class="form-group">
+                    <label for="kidNome">Nome:</label>
+                    <input type="text" id="kidNome" class="form-input" required placeholder="Es. Marco">
+                </div>
+
+                <div class="form-group">
+                    <label for="kidCognome">Cognome:</label>
+                    <input type="text" id="kidCognome" class="form-input" required placeholder="Es. Rossi">
+                </div>
+
+                <div class="form-group">
+                    <label for="kidClasse">Classe di Catechismo:</label>
+                    <select id="kidClasse" class="form-select">
+                        <option value="prima">1ª Elementare</option>
+                        <option value="seconda">2ª Elementare</option>
+                        <option value="terza">3ª Elementare</option>
+                        <option value="quarta">4ª Elementare</option>
+                        <option value="quinta">5ª Elementare</option>
+                        <option value="primaMedia">1ª Media</option>
+                        <option value="secondaMedia">2ª Media</option>
+                        <option value="terzaMedia">3ª Media</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="kidTelefono">Recapito Telefonico Famiglia (Telefono/WhatsApp):</label>
+                    <input type="tel" id="kidTelefono" class="form-input" placeholder="Es. 3331234567">
+                </div>
+
+                <div class="form-group">
+                    <label for="kidAllergie">Allergie / Intolleranze Alimentari (Sicurezza Merenda):</label>
+                    <input type="text" id="kidAllergie" class="form-input" placeholder="Es. Lattosio, Glutine (Celiachia), Frutta a guscio...">
+                </div>
+
+                <div class="form-group">
+                    <label for="kidDeleghe">Deleghe Uscita & Ritiro Minori:</label>
+                    <input type="text" id="kidDeleghe" class="form-input" placeholder="Es. Esce alle 16:30 con la nonna Maria, Ritiro papà...">
+                </div>
+
+                <div class="form-group">
+                    <label for="kidNote">Note Didattiche ed Educative:</label>
+                    <textarea id="kidNote" class="form-textarea" rows="2" placeholder="Eventuali note utili sul percorso dell'alunno"></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" id="btnDeleteKid" class="btn-modal-danger hidden">Elimina</button>
+                    <button type="button" id="btnCancelModal" class="btn-modal-secondary">Annulla</button>
+                    <button type="submit" class="btn-modal-primary">Salva Scheda</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- LOGICA JAVASCRIPT REGISTRO ELETTRONICO                     -->
+    <!-- ========================================================= -->
+    <script>
+        const CLASS_LABELS = {
+            prima: "1ª Elementare",
+            seconda: "2ª Elementare",
+            terza: "3ª Elementare",
+            quarta: "4ª Elementare",
+            quinta: "5ª Elementare",
+            primaMedia: "1ª Media",
+            secondaMedia: "2ª Media",
+            terzaMedia: "3ª Media"
+        };
+
+        function normalizeClass(val) {
+            if (!val) return "terza";
+            const s = String(val).toLowerCase().trim();
+            if (s === "prima" || (s.includes("1") && (s.includes("elem") || s.includes("prim")))) return "prima";
+            if (s === "seconda" || (s.includes("2") && (s.includes("elem") || s.includes("sec")))) return "seconda";
+            if (s === "terza" || (s.includes("3") && (s.includes("elem") || s.includes("terz")))) return "terza";
+            if (s === "quarta" || (s.includes("4") && (s.includes("elem") || s.includes("quar")))) return "quarta";
+            if (s === "quinta" || (s.includes("5") && (s.includes("elem") || s.includes("quin")))) return "quinta";
+            if (s === "primamedia" || (s.includes("1") && s.includes("med"))) return "primaMedia";
+            if (s === "secondamedia" || (s.includes("2") && s.includes("med"))) return "secondaMedia";
+            if (s === "terzamedia" || (s.includes("3") && s.includes("med"))) return "terzaMedia";
+            return s;
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        let selectedClass = normalizeClass(urlParams.get("classe") || localStorage.getItem("catechista_classe_selezionata") || "terza");
+        localStorage.setItem("catechista_classe_selezionata", selectedClass);
+
+        let currentDate = urlParams.get("data") || getTodayDateStr();
+        let searchQuery = "";
+        let people = [];
+        let attendance = {};
+
+        // Configurazione Supabase
+        let SUPABASE_URL = "https://qxevcfjtjbrlewagorju.supabase.co";
+        let SUPABASE_ANON_KEY = localStorage.getItem("supabase_anon_key") || "";
+        let supabaseClient = null;
+        let isCloudConnected = false;
+        let realtimeChannel = null;
+
+        function getTodayDateStr() {
+            const now = new Date();
+            const y = now.getFullYear();
+            const m = String(now.getMonth() + 1).padStart(2, "0");
+            const d = String(now.getDate()).padStart(2, "0");
+            return `${y}-${m}-${d}`;
+        }
+
+        function formatItalianDate(dateStr) {
+            if (!dateStr) return "";
+            const parts = dateStr.split("-");
+            if (parts.length !== 3) return dateStr;
+            const d = new Date(parts[0], parts[1] - 1, parts[2]);
+            return d.toLocaleDateString("it-IT", {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+                year: "numeric"
+            });
+        }
+
+        function initSupabase() {
+            if (window.ENV) {
+                if (window.ENV.SUPABASE_URL) SUPABASE_URL = window.ENV.SUPABASE_URL;
+                if (window.ENV.SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY) SUPABASE_ANON_KEY = window.ENV.SUPABASE_ANON_KEY;
+            }
+
+            if (!SUPABASE_ANON_KEY) {
+                SUPABASE_ANON_KEY = localStorage.getItem("supabase_anon_key") || "";
+            }
+
+            if (window.supabase && typeof window.supabase.createClient === "function" && SUPABASE_URL && SUPABASE_ANON_KEY) {
+                try {
+                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    return true;
+                } catch (e) {
+                    console.error("Errore Supabase:", e);
+                }
+            }
+            supabaseClient = null;
+            return false;
+        }
+
+        function updateCloudBadge() {
+            const badge = document.getElementById("cloudBadgeText");
+            if (!badge) return;
+            if (isCloudConnected) {
+                badge.innerHTML = `<span style="color:#4ade80;">● Connesso</span>`;
+            } else if (SUPABASE_ANON_KEY) {
+                badge.innerHTML = `<span style="color:#fde047;">● Connessione...</span>`;
+            } else {
+                badge.innerHTML = `<span style="color:#94a3b8;">○ Offline</span>`;
+            }
+        }
+
+        window.openSupabasePrompt = function() {
+            const current = localStorage.getItem("supabase_anon_key") || "";
+            const key = prompt(
+                "Configurazione Database Supabase Cloud:\n\nInserisci la Anon Key pubblica di Supabase per sincronizzare in tempo reale:",
+                current
+            );
+            if (key !== null) {
+                localStorage.setItem("supabase_anon_key", key.trim());
+                SUPABASE_ANON_KEY = key.trim();
+                initSupabase();
+                syncWithSupabase();
+            }
+        };
+
+        function loadLocalData() {
+            try {
+                const p = localStorage.getItem("registro_iscritti_v1");
+                if (p) people = JSON.parse(p);
+                const a = localStorage.getItem("registro_presenze_v1");
+                if (a) attendance = JSON.parse(a);
+            } catch (e) {
+                console.error("loadLocalData:", e);
+            }
+
+            if (!people || people.length === 0) {
+                people = [
+                    { id: "p_1", nome: "Luca", cognome: "Rossi", ruolo: "Bambino", anno: "terza", iscrittoCatechismo: true, allergie: "Intolleranza al Lattosio", deleghe: "Esce alle 16:30 con nonna", note: "Molto attivo e puntuale", telefono: "3331112233" },
+                    { id: "p_2", nome: "Giulia", cognome: "Bianchi", ruolo: "Bambino", anno: "terza", iscrittoCatechismo: true, allergie: "", deleghe: "Ritiro papà Marco", note: "", telefono: "3409988776" },
+                    { id: "p_3", nome: "Matteo", cognome: "Verdi", ruolo: "Bambino", anno: "quarta", iscrittoCatechismo: true, allergie: "Frutta a guscio (grave)", deleghe: "", note: "Chierichetto", telefono: "3281234567" },
+                    { id: "p_4", nome: "Sara", cognome: "Neri", ruolo: "Bambino", anno: "prima", iscrittoCatechismo: true, allergie: "", deleghe: "", note: "", telefono: "3310001122" },
+                    { id: "p_5", nome: "Lorenzo", cognome: "Ferrari", ruolo: "Bambino", anno: "quinta", iscrittoCatechismo: true, allergie: "", deleghe: "Torna a casa da solo", note: "", telefono: "3385554433" },
+                    { id: "p_6", nome: "Elena", cognome: "Romano", ruolo: "Bambino", anno: "secondaMedia", iscrittoCatechismo: true, allergie: "Glutine (Celiachia)", deleghe: "", note: "", telefono: "3471122334" }
+                ];
+                saveLocalPeople();
+            }
+        }
+
+        function saveLocalPeople() {
+            localStorage.setItem("registro_iscritti_v1", JSON.stringify(people));
+        }
+
+        function saveLocalAttendance() {
+            localStorage.setItem("registro_presenze_v1", JSON.stringify(attendance));
+        }
+
+        async function syncWithSupabase() {
+            updateCloudBadge();
+            if (!supabaseClient) return;
+
+            try {
+                const { data: remotePeople, error: errP } = await supabaseClient
+                    .from("iscritti")
+                    .select("*")
+                    .order("cognome", { ascending: true });
+
+                if (errP) {
+                    console.warn("Supabase iscritti:", errP.message);
+                    isCloudConnected = false;
+                    updateCloudBadge();
+                    return;
+                }
+
+                isCloudConnected = true;
+                updateCloudBadge();
+
+                if (remotePeople && remotePeople.length > 0) {
+                    people = remotePeople.map(r => ({
+                        id: r.id,
+                        nome: r.nome,
+                        cognome: r.cognome,
+                        ruolo: r.ruolo,
+                        anno: r.anno,
+                        iscrittoCatechismo: !!r.iscritto_catechismo,
+                        allergie: r.allergie || "",
+                        deleghe: r.deleghe || "",
+                        note: r.note || "",
+                        telefono: r.telefono || ""
+                    }));
+                    saveLocalPeople();
+                }
+
+                await fetchAttendanceForCurrentDate();
+                await fetchDailyNote();
+                setupRealtime();
+                renderUI();
+            } catch (e) {
+                console.error("syncWithSupabase:", e);
+                isCloudConnected = false;
+                updateCloudBadge();
+            }
+        }
+
+        async function fetchAttendanceForCurrentDate() {
+            if (!supabaseClient) return;
+            try {
+                const { data: remoteAtt, error } = await supabaseClient
+                    .from("presenze")
+                    .select("*")
+                    .eq("data", currentDate);
+
+                if (!error && remoteAtt) {
+                    if (!attendance[currentDate]) attendance[currentDate] = {};
+                    remoteAtt.forEach(r => {
+                        attendance[currentDate][r.iscritto_id] = {
+                            catechismo: !!r.catechismo,
+                            oratorio: !!r.oratorio,
+                            messa: !!r.messa,
+                            uscito: !!r.uscito,
+                            oraUscita: r.ora_uscita || "",
+                            noteGiorno: r.note_giorno || ""
+                        };
+                    });
+                    saveLocalAttendance();
+                }
+            } catch (e) {
+                console.error("fetchAttendance:", e);
+            }
+        }
+
+        async function fetchDailyNote() {
+            if (!supabaseClient) return;
+            try {
+                const { data, error } = await supabaseClient
+                    .from("note_giornaliere")
+                    .select("nota")
+                    .eq("data", currentDate)
+                    .maybeSingle();
+
+                if (!error && data) {
+                    document.getElementById("lessonNotesInput").value = data.nota || "";
+                }
+            } catch (e) {
+                console.error("fetchDailyNote:", e);
+            }
+        }
+
+        function setupRealtime() {
+            if (!supabaseClient || realtimeChannel) return;
+            try {
+                realtimeChannel = supabaseClient
+                    .channel("realtime_scolastico_channel")
+                    .on("postgres_changes", { event: "*", schema: "public", table: "presenze" }, payload => {
+                        const rec = payload.new || payload.old;
+                        if (rec && rec.data === currentDate) {
+                            if (!attendance[currentDate]) attendance[currentDate] = {};
+                            if (payload.eventType === "DELETE") {
+                                delete attendance[currentDate][rec.iscritto_id];
+                            } else {
+                                attendance[currentDate][rec.iscritto_id] = {
+                                    catechismo: !!rec.catechismo,
+                                    oratorio: !!rec.oratorio,
+                                    messa: !!rec.messa,
+                                    uscito: !!rec.uscito,
+                                    oraUscita: rec.ora_uscita || ""
+                                };
+                            }
+                            saveLocalAttendance();
+                            renderUI();
+                        }
+                    })
+                    .on("postgres_changes", { event: "*", schema: "public", table: "iscritti" }, () => {
+                        syncWithSupabase();
+                    })
+                    .subscribe();
+            } catch (e) {
+                console.error("setupRealtime:", e);
+            }
+        }
+
+        // RENDERING TABELLA REGISTRO
+        function renderUI() {
+            document.getElementById("datePicker").value = currentDate;
+            document.getElementById("formattedDateText").textContent = formatItalianDate(currentDate);
+
+            const label = CLASS_LABELS[selectedClass] || selectedClass;
+            document.getElementById("breadcrumbClassName").textContent = `Classe ${label}`;
+            document.getElementById("activeClassName").textContent = `Classe ${label}`;
+            document.getElementById("activeClassSummary").textContent = `Registro Ufficiale Presenze • ${formatItalianDate(currentDate)}`;
+
+            // Filtra e ordina alfabeticamente per Cognome
+            const classKids = people
+                .filter(p => normalizeClass(p.anno) === selectedClass)
+                .sort((a, b) => (a.cognome || "").localeCompare(b.cognome || ""));
+
+            const filteredKids = classKids.filter(p => {
+                if (!searchQuery) return true;
+                const full = `${p.nome} ${p.cognome} ${p.allergie} ${p.deleghe} ${p.note}`.toLowerCase();
+                return full.includes(searchQuery.toLowerCase());
+            });
+
+            // Metriche
+            const dayAtt = attendance[currentDate] || {};
+            let countTot = classKids.length;
+            let countCat = 0;
+            let countOra = 0;
+            let countMes = 0;
+
+            classKids.forEach(k => {
+                const att = dayAtt[k.id];
+                if (att && att.catechismo) countCat++;
+                if (att && att.oratorio) countOra++;
+                if (att && att.messa) countMes++;
+            });
+
+            document.getElementById("statTotal").textContent = countTot;
+            document.getElementById("statPresentCat").textContent = countCat;
+            document.getElementById("statAbsentCat").textContent = countTot - countCat;
+            document.getElementById("statInOratorio").textContent = countOra;
+            document.getElementById("statMessa").textContent = countMes;
+
+            const tbody = document.getElementById("kidsTableBody");
+            if (filteredKids.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" style="text-align:center; padding: 40px; color: var(--text-muted);">
+                            <i class="fa-solid fa-folder-open" style="font-size:2.2rem; color:#cbd5e1; margin-bottom:10px; display:block;"></i>
+                            <strong>Nessun alunno registrato in ${label}</strong>
+                            <p style="font-size:0.82rem; margin-top:4px;">Utilizza il pulsante <em>+ Nuovo Alunno</em> per aggiungere il primo iscritto a questa classe.</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            let html = "";
+            filteredKids.forEach((k, idx) => {
+                const att = dayAtt[k.id] || { catechismo: false, oratorio: false, messa: false };
+                const isPresent = !!att.catechismo;
+                const initials = `${(k.nome || "A").charAt(0)}${(k.cognome || "B").charAt(0)}`.toUpperCase();
+                const rowClass = isPresent ? "row-present" : "row-absent";
+
+                html += `
+                    <tr class="${rowClass}">
+                        <!-- N. Ordine -->
+                        <td class="td-num">${idx + 1}</td>
+
+                        <!-- Alunno -->
+                        <td>
+                            <div class="student-cell">
+                                <div class="student-avatar">${initials}</div>
+                                <div class="student-names">
+                                    <span class="student-full-name">${escapeHtml(k.cognome)} ${escapeHtml(k.nome)}</span>
+                                    <span class="student-meta">${label} ${k.iscrittoCatechismo ? "• Iscritto" : "• Oratorio"}</span>
+                                </div>
+                            </div>
+                        </td>
+
+                        <!-- Tasti P / A Stile Registro Elettronico -->
+                        <td style="text-align: center;">
+                            <div class="pa-switcher">
+                                <button type="button" onclick="setExactPresence('${k.id}', true)" class="pa-btn ${isPresent ? 'active-p' : ''}" title="Segna Presente">
+                                    <i class="fa-solid fa-check"></i>
+                                    <span>P</span>
+                                </button>
+                                <button type="button" onclick="setExactPresence('${k.id}', false)" class="pa-btn ${!isPresent ? 'active-a' : ''}" title="Segna Assente">
+                                    <i class="fa-solid fa-xmark"></i>
+                                    <span>A</span>
+                                </button>
+                            </div>
+                        </td>
+
+                        <!-- Oratorio / Doposcuola -->
+                        <td style="text-align: center;">
+                            <button type="button" onclick="toggleActivity('${k.id}', 'oratorio')" class="pill-toggle ${att.oratorio ? 'active-ora' : ''}" title="Si ferma per le attività di oratorio">
+                                <i class="fa-solid fa-volleyball"></i>
+                                <span>${att.oratorio ? 'In Oratorio' : 'No Oratorio'}</span>
+                            </button>
+                        </td>
+
+                        <!-- S. Messa -->
+                        <td style="text-align: center;">
+                            <button type="button" onclick="toggleActivity('${k.id}', 'messa')" class="pill-toggle ${att.messa ? 'active-mes' : ''}" title="Partecipazione alla S. Messa domenicale">
+                                <i class="fa-solid fa-cross"></i>
+                                <span>${att.messa ? 'S. Messa ✓' : 'S. Messa'}</span>
+                            </button>
+                        </td>
+
+                        <!-- Segnalazioni / Allergie / Deleghe -->
+                        <td>
+                            <div class="alerts-cluster">
+                                ${k.allergie ? `
+                                    <span class="table-alert allergy" title="Allergia alimentare per la merenda">
+                                        <i class="fa-solid fa-triangle-exclamation"></i>
+                                        <span>${escapeHtml(k.allergie)}</span>
+                                    </span>
+                                ` : ''}
+                                ${k.deleghe ? `
+                                    <span class="table-alert delega" title="Delega ritiro o uscita">
+                                        <i class="fa-solid fa-clock"></i>
+                                        <span>${escapeHtml(k.deleghe)}</span>
+                                    </span>
+                                ` : ''}
+                                ${k.note ? `
+                                    <span class="table-alert note" title="Note didattiche">
+                                        <i class="fa-solid fa-note-sticky"></i>
+                                        <span>${escapeHtml(k.note)}</span>
+                                    </span>
+                                ` : ''}
+                                ${(!k.allergie && !k.deleghe && !k.note) ? '<span style="color:#cbd5e1; font-size:0.75rem;">—</span>' : ''}
+                            </div>
+                        </td>
+
+                        <!-- Contatto Famiglia -->
+                        <td>
+                            ${k.telefono ? `
+                                <a href="tel:${escapeHtml(k.telefono)}" class="btn-call" title="Chiama recapito genitore (${escapeHtml(k.telefono)})">
+                                    <i class="fa-solid fa-phone"></i>
+                                    <span>${escapeHtml(k.telefono)}</span>
+                                </a>
+                            ` : '<span style="color:#cbd5e1; font-size:0.75rem;">Nessun recapito</span>'}
+                        </td>
+
+                        <!-- Azioni / Modifica Scheda -->
+                        <td style="text-align: center;">
+                            <button type="button" onclick="openEditKidModal('${k.id}')" class="btn-table-icon" title="Modifica scheda anagrafica alunno">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        // IMPOSTA PRESENZA ESATTA (P oppure A)
+        window.setExactPresence = async function(kidId, isPresent) {
+            if (!attendance[currentDate]) attendance[currentDate] = {};
+            if (!attendance[currentDate][kidId]) {
+                attendance[currentDate][kidId] = { catechismo: false, oratorio: false, messa: false, uscito: false, oraUscita: "" };
+            }
+
+            attendance[currentDate][kidId].catechismo = isPresent;
+            saveLocalAttendance();
+            renderUI();
+
+            if (supabaseClient) {
+                try {
+                    const record = attendance[currentDate][kidId];
+                    await supabaseClient.from("presenze").upsert({
+                        data: currentDate,
+                        iscritto_id: kidId,
+                        catechismo: record.catechismo,
+                        oratorio: record.oratorio,
+                        messa: record.messa,
+                        uscito: record.uscito,
+                        ora_uscita: record.ora_uscita || "",
+                        updated_at: new Date().toISOString()
+                    }, { onConflict: "data,iscritto_id" });
+                } catch (e) {
+                    console.error("setExactPresence Supabase:", e);
+                }
+            }
+        };
+
+        window.toggleActivity = async function(kidId, type) {
+            if (!attendance[currentDate]) attendance[currentDate] = {};
+            if (!attendance[currentDate][kidId]) {
+                attendance[currentDate][kidId] = { catechismo: false, oratorio: false, messa: false, uscito: false, oraUscita: "" };
+            }
+
+            attendance[currentDate][kidId][type] = !attendance[currentDate][kidId][type];
+            saveLocalAttendance();
+            renderUI();
+
+            if (supabaseClient) {
+                try {
+                    const record = attendance[currentDate][kidId];
+                    await supabaseClient.from("presenze").upsert({
+                        data: currentDate,
+                        iscritto_id: kidId,
+                        catechismo: record.catechismo,
+                        oratorio: record.oratorio,
+                        messa: record.messa,
+                        uscito: record.uscito,
+                        ora_uscita: record.ora_uscita || "",
+                        updated_at: new Date().toISOString()
+                    }, { onConflict: "data,iscritto_id" });
+                } catch (e) {
+                    console.error("toggleActivity error:", e);
+                }
+            }
+        };
+
+        // Appello Rapido Tutti Presenti
+        async function markAllClassPresent() {
+            if (!attendance[currentDate]) attendance[currentDate] = {};
+            const classKids = people.filter(p => normalizeClass(p.anno) === selectedClass);
+            if (classKids.length === 0) return;
+
+            const upserts = [];
+            classKids.forEach(k => {
+                if (!attendance[currentDate][k.id]) {
+                    attendance[currentDate][k.id] = { catechismo: true, oratorio: false, messa: false, uscito: false, oraUscita: "" };
+                } else {
+                    attendance[currentDate][k.id].catechismo = true;
+                }
+
+                if (supabaseClient) {
+                    const rec = attendance[currentDate][k.id];
+                    upserts.push({
+                        data: currentDate,
+                        iscritto_id: k.id,
+                        catechismo: true,
+                        oratorio: rec.oratorio,
+                        messa: rec.messa,
+                        uscito: rec.uscito,
+                        ora_uscita: rec.ora_uscita || "",
+                        updated_at: new Date().toISOString()
+                    });
+                }
+            });
+
+            saveLocalAttendance();
+            renderUI();
+            showToast(`✓ Appello completato: tutti i ${classKids.length} alunni segnati Presenti!`);
+
+            if (supabaseClient && upserts.length > 0) {
+                try {
+                    await supabaseClient.from("presenze").upsert(upserts, { onConflict: "data,iscritto_id" });
+                } catch (e) {
+                    console.error("markAllClassPresent error:", e);
+                }
+            }
+        }
+
+        async function passClassToOratorio() {
+            if (!attendance[currentDate]) attendance[currentDate] = {};
+            const classKids = people.filter(p => normalizeClass(p.anno) === selectedClass);
+            let count = 0;
+            const upserts = [];
+
+            classKids.forEach(k => {
+                const rec = attendance[currentDate][k.id];
+                if (rec && rec.catechismo && !rec.oratorio) {
+                    rec.oratorio = true;
+                    count++;
+                    if (supabaseClient) {
+                        upserts.push({
+                            data: currentDate,
+                            iscritto_id: k.id,
+                            catechismo: rec.catechismo,
+                            oratorio: true,
+                            messa: rec.messa,
+                            uscito: false,
+                            ora_uscita: "",
+                            updated_at: new Date().toISOString()
+                        });
+                    }
+                }
+            });
+
+            saveLocalAttendance();
+            renderUI();
+
+            if (count > 0) {
+                showToast(`⚽ ${count} alunni registrati per l'oratorio!`);
+            } else {
+                showToast("ℹ️ Nessun alunno da passare (effettua prima l'appello a catechismo)");
+            }
+
+            if (supabaseClient && upserts.length > 0) {
+                try {
+                    await supabaseClient.from("presenze").upsert(upserts, { onConflict: "data,iscritto_id" });
+                } catch (e) {
+                    console.error("passClassToOratorio error:", e);
+                }
+            }
+        }
+
+        // Giornale di classe note
+        let noteTimeout = null;
+        document.getElementById("lessonNotesInput").addEventListener("input", function(e) {
+            const text = e.target.value;
+            const statusEl = document.getElementById("noteSavedStatus");
+            statusEl.textContent = "Salvataggio nel registro...";
+
+            clearTimeout(noteTimeout);
+            noteTimeout = setTimeout(async () => {
+                if (supabaseClient) {
+                    try {
+                        await supabaseClient.from("note_giornaliere").upsert({
+                            data: currentDate,
+                            nota: text,
+                            created_at: new Date().toISOString()
+                        });
+                    } catch (err) {
+                        console.error("saveNote error:", err);
+                    }
+                }
+                statusEl.textContent = "✓ Giornale di Classe salvato";
+                setTimeout(() => { statusEl.textContent = ""; }, 2500);
+            }, 600);
+        });
+
+        // Modale Alunno
+        window.openAddKidModal = function() {
+            document.getElementById("kidForm").reset();
+            document.getElementById("kidId").value = "";
+            document.getElementById("kidClasse").value = selectedClass;
+            document.getElementById("modalTitle").textContent = `Nuovo Alunno - ${CLASS_LABELS[selectedClass]}`;
+            document.getElementById("btnDeleteKid").classList.add("hidden");
+            document.getElementById("kidModal").classList.remove("hidden");
+        };
+
+        window.openEditKidModal = function(kidId) {
+            const k = people.find(p => p.id === kidId);
+            if (!k) return;
+            document.getElementById("kidId").value = k.id;
+            document.getElementById("kidNome").value = k.nome || "";
+            document.getElementById("kidCognome").value = k.cognome || "";
+            document.getElementById("kidClasse").value = normalizeClass(k.anno) || selectedClass;
+            document.getElementById("kidTelefono").value = k.telefono || "";
+            document.getElementById("kidAllergie").value = k.allergie || "";
+            document.getElementById("kidDeleghe").value = k.deleghe || "";
+            document.getElementById("kidNote").value = k.note || "";
+            document.getElementById("modalTitle").textContent = `Scheda: ${k.cognome} ${k.nome}`;
+            document.getElementById("btnDeleteKid").classList.remove("hidden");
+            document.getElementById("kidModal").classList.remove("hidden");
+        };
+
+        document.getElementById("closeModalBtn").onclick = closeModal;
+        document.getElementById("btnCancelModal").onclick = closeModal;
+        function closeModal() {
+            document.getElementById("kidModal").classList.add("hidden");
+        }
+
+        document.getElementById("kidForm").addEventListener("submit", async function(e) {
+            e.preventDefault();
+            const id = document.getElementById("kidId").value || "p_" + Date.now();
+            const nome = document.getElementById("kidNome").value.trim();
+            const cognome = document.getElementById("kidCognome").value.trim();
+            const anno = document.getElementById("kidClasse").value;
+            const telefono = document.getElementById("kidTelefono").value.trim();
+            const allergie = document.getElementById("kidAllergie").value.trim();
+            const deleghe = document.getElementById("kidDeleghe").value.trim();
+            const note = document.getElementById("kidNote").value.trim();
+
+            if (!nome || !cognome) return;
+
+            const existingIdx = people.findIndex(p => p.id === id);
+            const personObj = {
+                id,
+                nome,
+                cognome,
+                ruolo: "Bambino",
+                anno,
+                iscrittoCatechismo: true,
+                allergie,
+                deleghe,
+                note,
+                telefono
+            };
+
+            if (existingIdx >= 0) {
+                people[existingIdx] = personObj;
+            } else {
+                people.push(personObj);
+            }
+
+            saveLocalPeople();
+            closeModal();
+            renderUI();
+            showToast(`✓ Scheda alunno salvata!`);
+
+            if (supabaseClient) {
+                try {
+                    await supabaseClient.from("iscritti").upsert({
+                        id,
+                        nome,
+                        cognome,
+                        ruolo: "Bambino",
+                        anno,
+                        iscritto_catechismo: true,
+                        allergie,
+                        deleghe,
+                        note,
+                        telefono
+                    });
+                } catch (err) {
+                    console.error("upsert person Supabase:", err);
+                }
+            }
+        });
+
+        document.getElementById("btnDeleteKid").addEventListener("click", async function() {
+            const id = document.getElementById("kidId").value;
+            if (!id) return;
+            if (!confirm("Sei sicura di voler eliminare questo alunno dal registro ufficiale?")) return;
+
+            people = people.filter(p => p.id !== id);
+            saveLocalPeople();
+            closeModal();
+            renderUI();
+            showToast("Alunno rimosso dal registro");
+
+            if (supabaseClient) {
+                try {
+                    await supabaseClient.from("iscritti").delete().eq("id", id);
+                } catch (err) {
+                    console.error("delete person error:", err);
+                }
+            }
+        });
+
+        document.getElementById("classSearchInput").addEventListener("input", (e) => {
+            searchQuery = e.target.value;
+            renderUI();
+        });
+
+        document.getElementById("btnAddNewKid").onclick = openAddKidModal;
+        document.getElementById("btnAllPresentCat").onclick = markAllClassPresent;
+        document.getElementById("btnPassToOratorio").onclick = passClassToOratorio;
+
+        document.getElementById("datePicker").addEventListener("change", async (e) => {
+            currentDate = e.target.value;
+            await fetchAttendanceForCurrentDate();
+            await fetchDailyNote();
+            renderUI();
+        });
+
+        document.getElementById("btnToday").addEventListener("click", async () => {
+            currentDate = getTodayDateStr();
+            await fetchAttendanceForCurrentDate();
+            await fetchDailyNote();
+            renderUI();
+        });
+
+        document.getElementById("btnPrevDay").addEventListener("click", async () => {
+            const d = new Date(currentDate);
+            d.setDate(d.getDate() - 1);
+            currentDate = d.toISOString().split("T")[0];
+            await fetchAttendanceForCurrentDate();
+            await fetchDailyNote();
+            renderUI();
+        });
+
+        document.getElementById("btnNextDay").addEventListener("click", async () => {
+            const d = new Date(currentDate);
+            d.setDate(d.getDate() + 1);
+            currentDate = d.toISOString().split("T")[0];
+            await fetchAttendanceForCurrentDate();
+            await fetchDailyNote();
+            renderUI();
+        });
+
+        function showToast(msg) {
+            const old = document.querySelector(".toast-msg");
+            if (old) old.remove();
+            const el = document.createElement("div");
+            el.className = "toast-msg";
+            el.innerHTML = msg;
+            document.body.appendChild(el);
+            setTimeout(() => { el.remove(); }, 2800);
+        }
+
+        function escapeHtml(t) {
+            if (!t) return "";
+            return String(t)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        async function init() {
+            loadLocalData();
+            initSupabase();
+            renderUI();
+            await syncWithSupabase();
+        }
+
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", init);
+        } else {
+            init();
+        }
+    </script>
+</body>
+
+</html>

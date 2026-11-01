@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro Elettronico • Portale Docenti Catechismo</title>
+    <!-- Icone FontAwesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Supabase JS Client UMD -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Configurazione ambiente -->
+    <script src="env.js"></script>
+
+    <style>
+        /* =========================================================
+           PORTALE DOCENTI / CATECHISTE - TEMA REGISTRO ELETTRONICO
+           ========================================================= */
+        :root {
+            --primary: #1e3a8a;          /* Blu Ministeriale */
+            --primary-dark: #0f172a;     /* Navy Notte */
+            --primary-light: #2563eb;    /* Royal Blue */
+            --primary-subtle: #eff6ff;
+            --surface: #ffffff;
+            --background: #f8fafc;
+            --border: #e2e8f0;
+            --border-strong: #cbd5e1;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --success: #16a34a;
+            --success-bg: #dcfce7;
+            --warning: #d97706;
+            --warning-bg: #fef3c7;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 14px rgba(15, 23, 42, 0.06);
+            --shadow-lg: 0 10px 25px rgba(15, 23, 42, 0.09);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            background-color: var(--background);
+            color: var(--text-main);
+            line-height: 1.5;
+            padding-bottom: 70px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* BARRA SUPERIORE ISTITUZIONALE */
+        .portal-topbar {
+            background-color: var(--primary-dark);
+            color: #ffffff;
+            border-bottom: 3px solid var(--primary-light);
+            padding: 14px 24px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .topbar-container {
+            max-width: 1240px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .brand-section {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .crest-icon {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            border: 2px solid rgba(255, 255, 255, 0.25);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            color: #ffffff;
+            box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.4);
+        }
+
+        .brand-text h1 {
+            font-size: 1.2rem;
+            font-weight: 800;
+            letter-spacing: -0.2px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .brand-text p {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        .system-pill {
+            background-color: #334155;
+            color: #e2e8f0;
+            font-size: 0.68rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-topbar {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 7px 14px;
+            border-radius: var(--radius-sm);
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn-topbar:hover {
+            background-color: #ffffff;
+            color: var(--primary-dark);
+            border-color: #ffffff;
+        }
+
+        .btn-topbar-parrocchia {
+            background-color: #4f46e5;
+            border-color: #6366f1;
+        }
+
+        .btn-topbar-parrocchia:hover {
+            background-color: #4338ca;
+            color: #ffffff;
+        }
+
+        /* SOTTOBARRA: DATA LEZIONE & DOCENTE */
+        .portal-subbar {
+            background-color: #ffffff;
+            border-bottom: 1px solid var(--border);
+            padding: 10px 24px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .subbar-container {
+            max-width: 1240px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .teacher-info-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .teacher-avatar-small {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--primary-subtle);
+            color: var(--primary);
+            font-weight: 800;
+            font-size: 0.82rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #bfdbfe;
+        }
+
+        .teacher-label {
+            font-size: 0.86rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .teacher-sub {
+            font-size: 0.74rem;
+            color: var(--text-muted);
+        }
+
+        .date-picker-box {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background-color: var(--background);
+            padding: 4px 8px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+        }
+
+        .date-btn {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 5px 9px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .date-btn:hover {
+            background-color: var(--primary-subtle);
+            border-color: var(--primary-light);
+            color: var(--primary);
+        }
+
+        .date-input {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-main);
+            outline: none;
+        }
+
+        .date-input:focus {
+            border-color: var(--primary-light);
+        }
+
+        /* CONTENITORE PRINCIPALE */
+        .portal-main {
+            max-width: 1240px;
+            margin: 24px auto;
+            padding: 0 16px;
+        }
+
+        /* BANNER DI BENVENUTO / CRUSCOTTO DOCENTE */
+        .dashboard-welcome-card {
+            background: #ffffff;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            padding: 24px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .welcome-left h2 {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -0.2px;
+        }
+
+        .welcome-left p {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+            max-width: 680px;
+        }
+
+        .fast-access-box {
+            background-color: var(--primary-subtle);
+            border: 1px solid #bfdbfe;
+            border-radius: var(--radius-sm);
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-shrink: 0;
+        }
+
+        .btn-fast-open {
+            background-color: var(--primary-light);
+            color: #ffffff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.15s ease;
+        }
+
+        .btn-fast-open:hover {
+            background-color: var(--primary);
+        }
+
+        /* SEZIONI CLASSI */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-badge {
+            font-size: 0.72rem;
+            font-weight: 700;
+            background-color: #e2e8f0;
+            color: #475569;
+            padding: 3px 8px;
+            border-radius: 6px;
+        }
+
+        /* GRIGLIA CLASSI (Stile Fascicolo Scolastico / Dossier) */
+        .classes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+            gap: 18px;
+            margin-bottom: 30px;
+        }
+
+        .class-dossier-card {
+            background: #ffffff;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            text-decoration: none;
+            color: inherit;
+            cursor: pointer;
+        }
+
+        .class-dossier-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--primary-light);
+            box-shadow: var(--shadow-md);
+        }
+
+        .dossier-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #fafbfc;
+        }
+
+        .dossier-tag {
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+        }
+
+        .dossier-status-pill {
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .status-ready {
+            background-color: var(--success-bg);
+            color: var(--success);
+            border: 1px solid #bbf7d0;
+        }
+
+        .status-pending {
+            background-color: var(--warning-bg);
+            color: var(--warning);
+            border: 1px solid #fde68a;
+        }
+
+        .dossier-body {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .class-main-title {
+            font-size: 1.25rem;
+            font-weight: 900;
+            color: var(--text-main);
+            letter-spacing: -0.2px;
+        }
+
+        .class-subtext {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* TABELLINA STATISTICHE COMPATTA DELLA CARD */
+        .dossier-stats-table {
+            width: 100%;
+            background-color: var(--background);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 8px 12px;
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+        }
+
+        .dossier-stat-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dossier-stat-num {
+            font-size: 1.15rem;
+            font-weight: 900;
+            color: var(--text-main);
+            line-height: 1.1;
+        }
+
+        .dossier-stat-lbl {
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+
+        .dossier-footer {
+            padding: 12px 20px;
+            background-color: #fafbfc;
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.84rem;
+            font-weight: 700;
+            color: var(--primary-light);
+            transition: all 0.15s ease;
+        }
+
+        .class-dossier-card:hover .dossier-footer {
+            background-color: var(--primary);
+            color: #ffffff;
+        }
+
+        /* BOX RIEPILOGO GENERALE */
+        .general-summary-card {
+            background: #ffffff;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .summary-title h3 {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .summary-title p {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+        }
+
+        .summary-metrics {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .summary-metric-pill {
+            background-color: var(--background);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 8px 16px;
+            text-align: center;
+        }
+
+        .summary-metric-num {
+            font-size: 1.35rem;
+            font-weight: 900;
+            color: var(--primary);
+            line-height: 1.1;
+        }
+
+        .summary-metric-lbl {
+            font-size: 0.68rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ========================================================= -->
+    <!-- BARRA SUPERIORE ISTITUZIONALE                             -->
+    <!-- ========================================================= -->
+    <header class="portal-topbar">
+        <div class="topbar-container">
+            <div class="brand-section">
+                <div class="crest-icon">
+                    <i class="fa-solid fa-school"></i>
+                </div>
+                <div class="brand-text">
+                    <h1>
+                        <span>REGISTRO ELETTRONICO</span>
+                        <span class="system-pill">Quadro Classi</span>
+                    </h1>
+                    <p>Portale Docenti & Catechisti • Anno Pastorale 2026/2027</p>
+                </div>
+            </div>
+
+            <div class="topbar-actions">
+                <!-- Stato Cloud -->
+                <button id="btnCloudStatus" onclick="openSupabasePrompt()" class="btn-topbar" title="Verifica o imposta credenziali Supabase Cloud">
+                    <i class="fa-solid fa-cloud"></i>
+                    <span id="cloudBadgeText">Cloud...</span>
+                </button>
+
+                <!-- Passa alla Parrocchia -->
+                <a href="index.html" class="btn-topbar btn-topbar-parrocchia" title="Vai alla console generale della Segreteria">
+                    <i class="fa-solid fa-church"></i>
+                    <span>Segreteria Parrocchia</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- ========================================================= -->
+    <!-- SOTTOBARRA: DOCENTE & DATA LEZIONE                        -->
+    <!-- ========================================================= -->
+    <div class="portal-subbar">
+        <div class="subbar-container">
+            <div class="teacher-info-box">
+                <div class="teacher-avatar-small">
+                    <i class="fa-solid fa-chalkboard-user"></i>
+                </div>
+                <div>
+                    <span class="teacher-label">Quadro Docenti & Catechisti</span>
+                    <span class="teacher-sub"> • Seleziona il registro di classe</span>
+                </div>
+            </div>
+
+            <!-- Selettore Data e Navigazione -->
+            <div class="date-picker-box">
+                <button id="btnPrevDay" class="date-btn" title="Giorno precedente">◀</button>
+                <button id="btnToday" class="date-btn" title="Vai a Oggi">Oggi</button>
+                <input type="date" id="datePicker" class="date-input">
+                <button id="btnNextDay" class="date-btn" title="Giorno successivo">▶</button>
+                <span id="formattedDateText" style="font-size:0.82rem; font-weight:700; color:#334155; margin-left:6px;"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- CONTENUTO PRINCIPALE                                      -->
+    <!-- ========================================================= -->
+    <main class="portal-main">
+
+        <!-- BENVENUTO / CRUSCOTTO DOCENTE -->
+        <section class="dashboard-welcome-card">
+            <div class="welcome-left">
+                <h2>Seleziona la tua Classe per aprire il Registro Elettronico</h2>
+                <p>
+                    Clicca sul fascicolo della classe assegnata per visualizzare l'appello ufficiale, annotare le presenze a <strong>Catechismo</strong>, alla <strong>Messa</strong>, gli alunni fermati in <strong>Oratorio</strong> e il giornale delle lezioni.
+                </p>
+            </div>
+
+            <!-- Scorciatoia Rapida Ultima Classe -->
+            <div id="lastClassBox" class="fast-access-box hidden">
+                <div>
+                    <span style="font-size:0.72rem; font-weight:800; color:var(--primary); text-transform:uppercase;">Ultima classe aperta:</span>
+                    <h3 id="lastClassName" style="font-size:1.05rem; font-weight:900; color:var(--text-main);">Classe 3ª Elementare</h3>
+                </div>
+                <a id="lastClassLink" href="registro_classe.html?classe=terza" class="btn-fast-open">
+                    <span>Accedi al Registro</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </a>
+            </div>
+        </section>
+
+        <!-- SEZIONE ELEMENTARI (SCUOLA PRIMARIA) -->
+        <div class="section-header">
+            <h3 class="section-title">
+                <i class="fa-solid fa-book-bookmark" style="color: var(--primary-light);"></i>
+                <span>Scuola Primaria • Gruppi Elementari</span>
+            </h3>
+            <span class="section-badge">Classi 1ª - 5ª</span>
+        </div>
+
+        <div class="classes-grid">
+            <!-- 1ª Elementare -->
+            <a href="registro_classe.html?classe=prima" class="class-dossier-card" data-class="prima">
+                <div class="dossier-header">
+                    <span class="dossier-tag">Elementari</span>
+                    <span class="dossier-status-pill status-ready" id="status_pill_prima">Registro Attivo</span>
+                </div>
+                <div class="dossier-body">
+                    <div>
+                        <h4 class="class-main-title">1ª Elementare</h4>
+                        <p class="class-subtext">Primo anno di catechismo • Accoglienza</p>
+                    </div>
+                    <div class="dossier-stats-table">
+                        <div class="dossier-stat-item">
+                            <span class="dossier-stat-num" id="stat_tot_prima">-</span>
+                            <span class="dossier-stat-lbl">Iscritti</span>
+                        </div>
+                        <div class="dossier-stat-item">
+                            <span class="dossier-stat-num" id="stat_pres_prima" style="color:var(--success);">-</span>
+                            <span class="dossier-stat-lbl">Presenti (P)</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="dossier-footer">
+                    <span>Accedi al Registro di Classe</span>
+                    <i class="fa-solid fa-chevron-right"></i>
+                </div>
+            </a>
+
+            <!-- 2ª Elementare -->
+            <a href="registro_classe.html?classe=seconda" class="class-dossier-card" data-class="seconda">
+                <div class="dossier-header">
+                    <span class="dossier-tag">Elementari</span>
+                    <span class="dossier-status-pill status-ready" id="status_pill_seconda">Registro Attivo</span>
+                </div>
+                <div class="dossier-body">
+                    <div>
+                        <h4 class="class-main-title">2ª Elementare</h4>
+                        <p class="class-subtext">Secondo anno • Iniziazione cristiana</p>
+                    </div>
+                    <div class="dossier-stats-table">
+                        <div class="dossier-stat-item">
+                            <span class="dossier-stat-num" id="stat_tot_seconda">-</span>
+                            <span class="dossier-stat-lbl">Iscritti</span>
+                        </div>
+                        <div class="dossier-stat-item">
+                            <span class="dossier-stat-num" id="stat_pres_seconda" style="color:var(--success);">-</span>
+                            <span class="dossier-stat-lbl">Presenti (P)</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="dossier-footer">
+                    <span>Accedi al Registro di Classe</span>
+                    <i class="fa-solid fa-chevron-right"></i>
+                </div>
+            </a>
+
+            <!-- 3ª Elementare -->
+            <a href="registro_classe.html?classe=terza" class="class-dossier-card" data-class="terza">
+                <div class="dossier-header">
+                    <span class="dossier-tag">Elementari</span>
+                    <span class="dossier-status-pill status-ready" id="status_pill_terza">Registro Attivo</span>
+                </div>
+                <div class="dossier-body">
+                    <div>
+                        <h4 class="class-main-title">3ª Elementare</h4>
+                        <p class="class-subtext">Anno Prima Confessione e Riconciliazione</p>
+                    </div>
+                    <div class="dossier-stats-table">
+                        <div class="dossier-stat-item">
+                            <span class="dossier-stat-num" id="stat_tot_terza">-</span>
+                            <span class="dossier-stat-lbl">Iscritti</span>
+                        </div>
+                        <div class="dossier-stat-item">
+                            <span class="dossier-stat-num" id="stat_pres_terza" style="color:var(--success);">-</span>
+                            <span class="dossier-stat-lbl">Presenti (P)</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="dossier-footer">
+                    <span>Accedi al Registro di Classe</span>
+                    <i class="fa-solid fa-chevron-right"></i>
+                </div>
+            </a>
+
+            <!-- 4ª Elementare -->
+            <a href="registro_classe.html?classe=quarta" class="class-dossier-card" data-class="quarta">
+                <div class="dossier-header">
+                    <span class="dossier-tag">Elementari</span>
+                    <span class="dossier-status-pill status-ready" id="status_pill_quarta">Registro Attivo</span>
+                </div>
+                <div class="dossier-body">
+                    <div>
+                        <h4 class="class-main-title">4ª Elementare</h4>
+                        <p class="class-subtext">Anno Eucaristico • Prima Comunione</p>
+                    </div>
+                    <div class="dossier-stats-table">
+                        <div class="dossier-stat-item">
+                            <span class="dossier-stat-num" id="stat_tot_quarta">-</span>
+                            <span class="dossier-stat-lbl">Iscritti</span>
+                        </div>
+                        <div class="dossier-stat-item">
+                            <span class="dossier-stat-num" id="stat_pres_quarta" style="color:var(--success);">-</span>
+                            <span class="dossier-stat-lbl">Presenti (P)</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="dossier-footer">
+                    <span>Accedi al Registro di Classe</span>
+                    <i class="fa-solid fa-chevron-right"></i>
+                </div>
+            </a>
+
+            <!-- 5ª Elementare -->
+            <a href="registro_classe.html?classe=quinta" class="class-dossier-card" data-class="quinta">
+                <div class="dossier-header">
+                    <span class="dossier-tag">Elementari</span>
+                    <span class="dossier-status-pill status-ready" id="status_pill_quinta">Registro Attivo</span>
+                </div>
+                <div class="dossier-body">
+                    <div>
+                        <h4 class="class-main-title">5ª Elementare</h4>
+                        <p class="class-subtext">Anno conclusivo primaria • Fraternità</p>
+                    </div>
+                    <div class="dossier-stats-table">
+                        <div class="dossier-stat-item">
+                            <span class="dossier-stat-num" id="stat_tot_quinta">-</span>
+                            <span class="dossier-stat-lbl">Iscritti</span>
+                        </div>
+                        <div class="dossier-stat-item">
+                            <span class="dossier-stat-num" id="stat_pres_quinta" style="color:var(--success);">-</span>
+                            <span class="dossier-stat-lbl">Presenti (P)</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="dossier-footer">
+                    <span>Accedi al Registro di Classe</span>
+                    <i class="fa-solid fa-chevron-right"></i>
+                </div>
+            </a>
+        </div>
+
+        <!-- SEZIONE MEDIE (SCUOLA SECONDARIA) -->
+        <div class="section-header">
+            <h3 class="section-title">
+                <i class="fa-solid fa-graduation-cap" style="color: #7e22ce;"></i>
+                <span>Scuola Secondaria di I Grado • Gruppi Medie</span>
+            </h3>
+            <span class="section-badge">Classi 1ª - 3ª Media</span>
+        </div>
+
+        <div class="classes-grid">
+            <!-- 1ª Media -->
+            <a href="registro_classe.html?classe=primaMedia" class="class-dossier-card" data-class="primaMedia">
+                <div class="dossier-header">
+                    <span class="dossier-tag" style="color:#7e22ce;">Secondaria</span>
+                    <span class="dossier-status-pill status-ready" id="status_pill_primaMedia">Registro Attivo</span>
+                </div>
+                <div class="dossier-body">
+                    <div>
+                        <h4 class="class-main-title">1ª Media</h4>
+                        <p class="class-subtext">Gruppo Preadolescenti • Cammino di fede</p>
+                    </div>
+                    <div class="dossier-stats-table">
+                        <div class="dossier-stat-item">
+                            <span class="dossier-stat-num" id="stat_tot_primaMedia">-</span>
+                            <span class="dossier-stat-lbl">Iscritti</span>
+                        </div>
+                        <div class="dossier-stat-item">
+                            <span class="dossier-stat-num" id="stat_pres_primaMedia" style="color:var(--success);">-</span>
+                            <span class="dossier-stat-lbl">Presenti (P)</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="dossier-footer">
+                    <span>Accedi al Registro di Classe</span>
+                    <i class="fa-solid fa-chevron-right"></i>
+                </div>
+            </a>
+
+            <!-- 2ª Media -->
+            <a href="registro_classe.html?classe=secondaMedia" class="class-dossier-card" data-class="secondaMedia">
+                <div class="dossier-header">
+                    <span class="dossier-tag" style="color:#7e22ce;">Secondaria</span>
+                    <span class="dossier-status-pill status-ready" id="status_pill_secondaMedia">Registro Attivo</span>
+                </div>
+                <div class="dossier-body">
+                    <div>
+                        <h4 class="class-main-title">2ª Media</h4>
+                        <p class="class-subtext">Anno di preparazione ai Doni dello Spirito</p>
+                    </div>
+                    <div class="dossier-stats-table">
+                        <div class="dossier-stat-item">
+                            <span class="dossier-stat-num" id="stat_tot_secondaMedia">-</span>
+                            <span class="dossier-stat-lbl">Iscritti</span>
+                        </div>
+                        <div class="dossier-stat-item">
+                            <span class="dossier-stat-num" id="stat_pres_secondaMedia" style="color:var(--success);">-</span>
+                            <span class="dossier-stat-lbl">Presenti (P)</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="dossier-footer">
+                    <span>Accedi al Registro di Classe</span>
+                    <i class="fa-solid fa-chevron-right"></i>
+                </div>
+            </a>
+
+            <!-- 3ª Media -->
+            <a href="registro_classe.html?classe=terzaMedia" class="class-dossier-card" data-class="terzaMedia">
+                <div class="dossier-header">
+                    <span class="dossier-tag" style="color:#7e22ce;">Secondaria</span>
+                    <span class="dossier-status-pill status-ready" id="status_pill_terzaMedia">Registro Attivo</span>
+                </div>
+                <div class="dossier-body">
+                    <div>
+                        <h4 class="class-main-title">3ª Media</h4>
+                        <p class="class-subtext">Sacramento della Santa Cresima</p>
+                    </div>
+                    <div class="dossier-stats-table">
+                        <div class="dossier-stat-item">
+                            <span class="dossier-stat-num" id="stat_tot_terzaMedia">-</span>
+                            <span class="dossier-stat-lbl">Iscritti</span>
+                        </div>
+                        <div class="dossier-stat-item">
+                            <span class="dossier-stat-num" id="stat_pres_terzaMedia" style="color:var(--success);">-</span>
+                            <span class="dossier-stat-lbl">Presenti (P)</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="dossier-footer">
+                    <span>Accedi al Registro di Classe</span>
+                    <i class="fa-solid fa-chevron-right"></i>
+                </div>
+            </a>
+        </div>
+
+        <!-- RIEPILOGO STATISTICO GENERALE -->
+        <section class="general-summary-card">
+            <div class="summary-title">
+                <h3>Quadro Statistico Generale del Catechismo</h3>
+                <p>Riepilogo presenze aggregate su tutte le classi per la data odierna</p>
+            </div>
+            <div class="summary-metrics">
+                <div class="summary-metric-pill">
+                    <div id="globalTotKids" class="summary-metric-num">0</div>
+                    <span class="summary-metric-lbl">Totale Alunni</span>
+                </div>
+                <div class="summary-metric-pill">
+                    <div id="globalPresKids" class="summary-metric-num" style="color:var(--success);">0</div>
+                    <span class="summary-metric-lbl">Presenti Oggi</span>
+                </div>
+                <div class="summary-metric-pill">
+                    <div id="globalOraKids" class="summary-metric-num" style="color:var(--warning);">0</div>
+                    <span class="summary-metric-lbl">In Oratorio</span>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ========================================================= -->
+    <!-- LOGICA JAVASCRIPT DEL QUADRO CLASSI                       -->
+    <!-- ========================================================= -->
+    <script>
+        const CLASS_LABELS = {
+            prima: "1ª Elementare",
+            seconda: "2ª Elementare",
+            terza: "3ª Elementare",
+            quarta: "4ª Elementare",
+            quinta: "5ª Elementare",
+            primaMedia: "1ª Media",
+            secondaMedia: "2ª Media",
+            terzaMedia: "3ª Media"
+        };
+
+        function normalizeClass(val) {
+            if (!val) return "";
+            const s = String(val).toLowerCase().trim();
+            if (s === "prima" || (s.includes("1") && (s.includes("elem") || s.includes("prim")))) return "prima";
+            if (s === "seconda" || (s.includes("2") && (s.includes("elem") || s.includes("sec")))) return "seconda";
+            if (s === "terza" || (s.includes("3") && (s.includes("elem") || s.includes("terz")))) return "terza";
+            if (s === "quarta" || (s.includes("4") && (s.includes("elem") || s.includes("quar")))) return "quarta";
+            if (s === "quinta" || (s.includes("5") && (s.includes("elem") || s.includes("quin")))) return "quinta";
+            if (s === "primamedia" || (s.includes("1") && s.includes("med"))) return "primaMedia";
+            if (s === "secondamedia" || (s.includes("2") && s.includes("med"))) return "secondaMedia";
+            if (s === "terzamedia" || (s.includes("3") && s.includes("med"))) return "terzaMedia";
+            return s;
+        }
+
+        let currentDate = getTodayDateStr();
+        let people = [];
+        let attendance = {};
+
+        // Configurazione Supabase
+        let SUPABASE_URL = "https://qxevcfjtjbrlewagorju.supabase.co";
+        let SUPABASE_ANON_KEY = localStorage.getItem("supabase_anon_key") || "";
+        let supabaseClient = null;
+        let isCloudConnected = false;
+
+        function getTodayDateStr() {
+            const now = new Date();
+            const y = now.getFullYear();
+            const m = String(now.getMonth() + 1).padStart(2, "0");
+            const d = String(now.getDate()).padStart(2, "0");
+            return `${y}-${m}-${d}`;
+        }
+
+        function formatItalianDate(dateStr) {
+            if (!dateStr) return "";
+            const parts = dateStr.split("-");
+            if (parts.length !== 3) return dateStr;
+            const d = new Date(parts[0], parts[1] - 1, parts[2]);
+            return d.toLocaleDateString("it-IT", {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+                year: "numeric"
+            });
+        }
+
+        function initSupabase() {
+            if (window.ENV) {
+                if (window.ENV.SUPABASE_URL) SUPABASE_URL = window.ENV.SUPABASE_URL;
+                if (window.ENV.SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY) SUPABASE_ANON_KEY = window.ENV.SUPABASE_ANON_KEY;
+            }
+
+            if (!SUPABASE_ANON_KEY) {
+                SUPABASE_ANON_KEY = localStorage.getItem("supabase_anon_key") || "";
+            }
+
+            if (window.supabase && typeof window.supabase.createClient === "function" && SUPABASE_URL && SUPABASE_ANON_KEY) {
+                try {
+                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    return true;
+                } catch (e) {
+                    console.error("Errore Supabase:", e);
+                }
+            }
+            supabaseClient = null;
+            return false;
+        }
+
+        function updateCloudBadge() {
+            const badge = document.getElementById("cloudBadgeText");
+            if (!badge) return;
+            if (isCloudConnected) {
+                badge.innerHTML = `<span style="color:#4ade80;">● Connesso</span>`;
+            } else if (SUPABASE_ANON_KEY) {
+                badge.innerHTML = `<span style="color:#fde047;">● Connessione...</span>`;
+            } else {
+                badge.innerHTML = `<span style="color:#94a3b8;">○ Offline</span>`;
+            }
+        }
+
+        window.openSupabasePrompt = function() {
+            const current = localStorage.getItem("supabase_anon_key") || "";
+            const key = prompt(
+                "Configurazione Database Supabase Cloud:\n\nInserisci la Anon Key pubblica di Supabase per sincronizzare:",
+                current
+            );
+            if (key !== null) {
+                localStorage.setItem("supabase_anon_key", key.trim());
+                SUPABASE_ANON_KEY = key.trim();
+                initSupabase();
+                syncWithSupabase();
+            }
+        };
+
+        function loadLocalData() {
+            try {
+                const p = localStorage.getItem("registro_iscritti_v1");
+                if (p) people = JSON.parse(p);
+                const a = localStorage.getItem("registro_presenze_v1");
+                if (a) attendance = JSON.parse(a);
+            } catch (e) {
+                console.error("loadLocalData:", e);
+            }
+
+            if (!people || people.length === 0) {
+                people = [
+                    { id: "p_1", nome: "Luca", cognome: "Rossi", ruolo: "Bambino", anno: "terza", iscrittoCatechismo: true, allergie: "Intolleranza al Lattosio", deleghe: "Esce alle 16:30 con nonna", note: "Molto attento e puntuale", telefono: "3331112233" },
+                    { id: "p_2", nome: "Giulia", cognome: "Bianchi", ruolo: "Bambino", anno: "terza", iscrittoCatechismo: true, allergie: "", deleghe: "Ritiro papà Marco", note: "", telefono: "3409988776" },
+                    { id: "p_3", nome: "Matteo", cognome: "Verdi", ruolo: "Bambino", anno: "quarta", iscrittoCatechismo: true, allergie: "Frutta a guscio (grave)", deleghe: "", note: "Chierichetto", telefono: "3281234567" },
+                    { id: "p_4", nome: "Sara", cognome: "Neri", ruolo: "Bambino", anno: "prima", iscrittoCatechismo: true, allergie: "", deleghe: "", note: "", telefono: "3310001122" },
+                    { id: "p_5", nome: "Lorenzo", cognome: "Ferrari", ruolo: "Bambino", anno: "quinta", iscrittoCatechismo: true, allergie: "", deleghe: "Torna a casa da solo", note: "", telefono: "3385554433" },
+                    { id: "p_6", nome: "Elena", cognome: "Romano", ruolo: "Bambino", anno: "secondaMedia", iscrittoCatechismo: true, allergie: "Glutine (Celiachia)", deleghe: "", note: "", telefono: "3471122334" }
+                ];
+                localStorage.setItem("registro_iscritti_v1", JSON.stringify(people));
+            }
+        }
+
+        async function syncWithSupabase() {
+            updateCloudBadge();
+            if (!supabaseClient) return;
+
+            try {
+                const { data: remotePeople, error: errP } = await supabaseClient
+                    .from("iscritti")
+                    .select("*")
+                    .order("cognome", { ascending: true });
+
+                if (errP) {
+                    console.warn("Supabase iscritti:", errP.message);
+                    isCloudConnected = false;
+                    updateCloudBadge();
+                    return;
+                }
+
+                isCloudConnected = true;
+                updateCloudBadge();
+
+                if (remotePeople && remotePeople.length > 0) {
+                    people = remotePeople.map(r => ({
+                        id: r.id,
+                        nome: r.nome,
+                        cognome: r.cognome,
+                        ruolo: r.ruolo,
+                        anno: r.anno,
+                        iscrittoCatechismo: !!r.iscritto_catechismo,
+                        allergie: r.allergie || "",
+                        deleghe: r.deleghe || "",
+                        note: r.note || "",
+                        telefono: r.telefono || ""
+                    }));
+                    localStorage.setItem("registro_iscritti_v1", JSON.stringify(people));
+                }
+
+                await fetchAttendanceForCurrentDate();
+                renderUI();
+            } catch (e) {
+                console.error("syncWithSupabase:", e);
+                isCloudConnected = false;
+                updateCloudBadge();
+            }
+        }
+
+        async function fetchAttendanceForCurrentDate() {
+            if (!supabaseClient) return;
+            try {
+                const { data: remoteAtt, error } = await supabaseClient
+                    .from("presenze")
+                    .select("*")
+                    .eq("data", currentDate);
+
+                if (!error && remoteAtt) {
+                    if (!attendance[currentDate]) attendance[currentDate] = {};
+                    remoteAtt.forEach(r => {
+                        attendance[currentDate][r.iscritto_id] = {
+                            catechismo: !!r.catechismo,
+                            oratorio: !!r.oratorio,
+                            messa: !!r.messa,
+                            uscito: !!r.uscito,
+                            oraUscita: r.ora_uscita || "",
+                            noteGiorno: r.note_giorno || ""
+                        };
+                    });
+                    localStorage.setItem("registro_presenze_v1", JSON.stringify(attendance));
+                }
+            } catch (e) {
+                console.error("fetchAttendance:", e);
+            }
+        }
+
+        function renderUI() {
+            document.getElementById("datePicker").value = currentDate;
+            document.getElementById("formattedDateText").textContent = formatItalianDate(currentDate);
+
+            // Controlla ultima classe salvata
+            const lastClass = localStorage.getItem("catechista_classe_selezionata");
+            const lastBox = document.getElementById("lastClassBox");
+            if (lastClass && CLASS_LABELS[lastClass]) {
+                lastBox.classList.remove("hidden");
+                document.getElementById("lastClassName").textContent = `Classe ${CLASS_LABELS[lastClass]}`;
+                document.getElementById("lastClassLink").href = `registro_classe.html?classe=${lastClass}&data=${currentDate}`;
+            } else {
+                lastBox.classList.add("hidden");
+            }
+
+            // Calcola numeri per ciascuna classe
+            const dayAtt = attendance[currentDate] || {};
+            let totalAll = 0;
+            let presAll = 0;
+            let oraAll = 0;
+
+            Object.keys(CLASS_LABELS).forEach(cId => {
+                const kidsOfClass = people.filter(p => normalizeClass(p.anno) === cId);
+                const tot = kidsOfClass.length;
+                let pres = 0;
+
+                kidsOfClass.forEach(k => {
+                    totalAll++;
+                    const att = dayAtt[k.id];
+                    if (att && att.catechismo) {
+                        pres++;
+                        presAll++;
+                    }
+                    if (att && att.oratorio) {
+                        oraAll++;
+                    }
+                });
+
+                const totEl = document.getElementById(`stat_tot_${cId}`);
+                const presEl = document.getElementById(`stat_pres_${cId}`);
+                if (totEl) totEl.textContent = tot;
+                if (presEl) presEl.textContent = pres;
+
+                // Aggiorna stato pillola
+                const pill = document.getElementById(`status_pill_${cId}`);
+                if (pill) {
+                    if (tot === 0) {
+                        pill.className = "dossier-status-pill";
+                        pill.style.backgroundColor = "#f1f5f9";
+                        pill.style.color = "#64748b";
+                        pill.textContent = "Nessun Alunno";
+                    } else if (pres > 0) {
+                        pill.className = "dossier-status-pill status-ready";
+                        pill.textContent = `Appello Fatto (${pres}/${tot})`;
+                    } else {
+                        pill.className = "dossier-status-pill status-pending";
+                        pill.textContent = "Da Compilare";
+                    }
+                }
+
+                // Aggiorna link card con data corrente
+                const card = document.querySelector(`.class-dossier-card[data-class="${cId}"]`);
+                if (card) {
+                    card.href = `registro_classe.html?classe=${cId}&data=${currentDate}`;
+                }
+            });
+
+            document.getElementById("globalTotKids").textContent = totalAll;
+            document.getElementById("globalPresKids").textContent = presAll;
+            document.getElementById("globalOraKids").textContent = oraAll;
+        }
+
+        // Navigazione Data
+        document.getElementById("datePicker").addEventListener("change", async (e) => {
+            currentDate = e.target.value;
+            await fetchAttendanceForCurrentDate();
+            renderUI();
+        });
+
+        document.getElementById("btnToday").addEventListener("click", async () => {
+            currentDate = getTodayDateStr();
+            await fetchAttendanceForCurrentDate();
+            renderUI();
+        });
+
+        document.getElementById("btnPrevDay").addEventListener("click", async () => {
+            const d = new Date(currentDate);
+            d.setDate(d.getDate() - 1);
+            currentDate = d.toISOString().split("T")[0];
+            await fetchAttendanceForCurrentDate();
+            renderUI();
+        });
+
+        document.getElementById("btnNextDay").addEventListener("click", async () => {
+            const d = new Date(currentDate);
+            d.setDate(d.getDate() + 1);
+            currentDate = d.toISOString().split("T")[0];
+            await fetchAttendanceForCurrentDate();
+            renderUI();
+        });
+
+        async function init() {
+            loadLocalData();
+            initSupabase();
+            renderUI();
+            await syncWithSupabase();
+        }
+
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", init);
+        } else {
+            init();
+        }
+    </script>
+</body>
+
+</html>
