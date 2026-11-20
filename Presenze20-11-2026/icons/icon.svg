@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4f46e5"/>
+      <stop offset="100%" stop-color="#3730a3"/>
+    </linearGradient>
+    <linearGradient id="crossGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+  </defs>
+  <!-- Background squircle -->
+  <rect width="512" height="512" rx="128" fill="url(#bgGrad)"/>
+  
+  <!-- Church building outline -->
+  <path d="M256 70 L340 160 L340 430 L172 430 L172 160 Z" fill="#ffffff" fill-opacity="0.95"/>
+  <path d="M256 40 L256 100 M236 60 L276 60" stroke="#f59e0b" stroke-width="16" stroke-linecap="round"/>
+  
+  <!-- Roof left & right wings -->
+  <path d="M172 230 L100 280 L100 430 L172 430 Z" fill="#ffffff" fill-opacity="0.85"/>
+  <path d="M340 230 L412 280 L412 430 L340 430 Z" fill="#ffffff" fill-opacity="0.85"/>
+  
+  <!-- Portal / Door -->
+  <path d="M226 430 L226 330 A30 30 0 0 1 286 330 L286 430 Z" fill="#4f46e5"/>
+  
+  <!-- Rose window -->
+  <circle cx="256" cy="200" r="28" fill="#f59e0b"/>
+  <circle cx="256" cy="200" r="14" fill="#ffffff"/>
+  
+  <!-- Side windows -->
+  <path d="M128 370 L128 330 A12 12 0 0 1 152 330 L152 370 Z" fill="#4f46e5"/>
+  <path d="M360 370 L360 330 A12 12 0 0 1 384 330 L384 370 Z" fill="#4f46e5"/>
+</svg>
