@@ -150,6 +150,7 @@ function initDatabaseSyncButton() {
 
 // 7. MODALE PROFILO ISCRITTO CON TELEFONI MULTIPLI
 let currentEditingPersonId = null;
+let userTouchedCatechismoCheckbox = false;
 
 function renderPhonesInModal(phonesList) {
   const container = document.getElementById('phonesContainer');
@@ -214,11 +215,27 @@ function initPersonModal() {
   function closeModal() {
     modal.classList.remove('open');
     currentEditingPersonId = null;
+    userTouchedCatechismoCheckbox = false;
     if (form) form.reset();
   }
 
   if (btnClose) btnClose.addEventListener('click', closeModal);
   if (btnCancel) btnCancel.addEventListener('click', closeModal);
+
+  const selectAnnoEl = document.getElementById('selectAnno');
+  const inputCatEl = document.getElementById('inputCatechismo');
+  if (inputCatEl) {
+    inputCatEl.addEventListener('change', () => {
+      userTouchedCatechismoCheckbox = true;
+    });
+  }
+  if (selectAnnoEl && inputCatEl) {
+    selectAnnoEl.addEventListener('change', () => {
+      if (!currentEditingPersonId && !userTouchedCatechismoCheckbox) {
+        inputCatEl.checked = CATECHISMO_CLASSES.some((c) => c.id === selectAnnoEl.value);
+      }
+    });
+  }
 
   modal.addEventListener('click', (e) => {
     if (e.target === modal) closeModal();
@@ -352,6 +369,7 @@ function openPersonModal(person, prefillAnno) {
   if (!modal) return;
 
   currentEditingPersonId = person ? person.id : null;
+  userTouchedCatechismoCheckbox = Boolean(person);
 
   if (modalTitle) {
     modalTitle.textContent = person ? 'Modifica Iscritto' : 'Nuovo Iscritto';
@@ -362,14 +380,17 @@ function openPersonModal(person, prefillAnno) {
   }
 
   // Precompila campi base
+  const targetAnno = person ? person.anno || 'prima' : (prefillAnno || 'prima');
   document.getElementById('inputNome').value = person ? person.nome || '' : '';
   document.getElementById('inputCognome').value = person ? person.cognome || '' : '';
   document.getElementById('selectRuolo').value = person ? person.ruolo || 'Bambino' : 'Bambino';
-  document.getElementById('selectAnno').value = person ? person.anno || 'prima' : (prefillAnno || 'prima');
-  
+  document.getElementById('selectAnno').value = targetAnno;
+
   const inputCat = document.getElementById('inputCatechismo');
   if (inputCat) {
-    inputCat.checked = person ? Boolean(person.iscrittoCatechismo) : true;
+    inputCat.checked = person
+      ? Boolean(person.iscrittoCatechismo)
+      : CATECHISMO_CLASSES.some((c) => c.id === targetAnno);
   }
 
   document.getElementById('inputAllergie').value = person ? person.allergie || '' : '';

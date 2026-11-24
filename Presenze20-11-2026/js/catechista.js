@@ -19,16 +19,22 @@ window.showCatechistaSection = function (sectionId) {
   renderCatechista();
 };
 
+// Helper: verifica se l'iscritto frequenta il catechismo ed appartiene a una classe di catechismo
+function isCatechismoStudent(person) {
+  return (
+    Boolean(person && person.iscrittoCatechismo) &&
+    CATECHISMO_CLASSES.some((c) => c.id === person.anno)
+  );
+}
+
 // 2. RENDERING GENERALE DELL'AREA CATECHISTE
 function renderCatechista() {
   const currentDate = getCurrentDate();
   const people = getPeople();
   const dayAttendance = getDayAttendance(currentDate);
 
-  // Consideriamo SOLO le classi di catechismo: 3ª Elem, 4ª Elem, 5ª Elem, 1ª Media, 2ª Media
-  const catechismoKids = people.filter((p) =>
-    CATECHISMO_CLASSES.some((c) => c.id === p.anno)
-  );
+  // Consideriamo SOLO chi ha "Frequenta il Catechismo" spuntato nelle classi 3ª Elem - 2ª Media
+  const catechismoKids = people.filter(isCatechismoStudent);
 
   // Calcola assenti globali di oggi a catechismo
   // NOTA: TUTTI PRESENTI DI DEFAULT. È assente solo se esplicitamente contrassegnato con assente: true
@@ -513,7 +519,7 @@ window.toggleCatechismoAttribute = function (personId, attr) {
 function markAllClassPresent() {
   const currentDate = getCurrentDate();
   const people = getPeople();
-  const classKids = people.filter((p) => p.anno === currentSection);
+  const classKids = people.filter((p) => isCatechismoStudent(p) && p.anno === currentSection);
   const updates = [];
 
   classKids.forEach((k) => {
@@ -535,7 +541,7 @@ function markAllClassPresent() {
 function passClassToOratorio() {
   const currentDate = getCurrentDate();
   const people = getPeople();
-  const classKids = people.filter((p) => p.anno === currentSection);
+  const classKids = people.filter((p) => isCatechismoStudent(p) && p.anno === currentSection);
   const updates = [];
   let count = 0;
 
