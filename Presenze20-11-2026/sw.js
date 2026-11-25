@@ -2,7 +2,7 @@
  * Service Worker per Registro Presenze Oratorio (PWA)
  * Consente l'installazione su Smartphone e Tablet e garantisce l'uso offline.
  */
-const CACHE_NAME = 'oratorio-presenze-v5';
+const CACHE_NAME = 'oratorio-presenze-v6';
 const ASSETS_TO_CACHE = [
   './',
   './login.html',
