@@ -188,7 +188,12 @@ function escapeHtml(str) {
 }
 
 // 4. INIZIALIZZAZIONE EVENTI
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  if (typeof window.whenAuthReady === 'function') {
+    const session = await window.whenAuthReady();
+    if (!session) return;
+  }
+
   const selNum = document.getElementById('numSquadre');
   const checkBilancia = document.getElementById('checkBilanciaEta');
   const btnRigenera = document.getElementById('btnRigeneraSquadre');

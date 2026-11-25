@@ -606,7 +606,11 @@ function escapeHtml(str) {
 }
 
 // 10. INIZIALIZZAZIONE EVENTI
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  if (typeof window.whenAuthReady === 'function') {
+    const session = await window.whenAuthReady();
+    if (!session) return;
+  }
   const btnMarkAll = document.getElementById('btnMarkAllPresent');
   const btnPassOra = document.getElementById('btnPassToOratorio');
   const btnNewKid = document.getElementById('btnNewKidClass');

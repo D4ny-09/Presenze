@@ -46,19 +46,60 @@ create index if not exists idx_iscritti_anno on public.iscritti (anno);
 alter table public.iscritti enable row level security;
 alter table public.presenze enable row level security;
 
--- 4. CRIA POLICY DI ACCESSO PUBBLICO ANONIMO (Lettura, Inserimento, Modifica, Cancellazione)
+-- 4. RIMUOVI EVENTUALI POLICY PUBBLICHE/ANONIME PRECEDENTI
 drop policy if exists "Accesso pubblico completo iscritti" on public.iscritti;
-create policy "Accesso pubblico completo iscritti"
+drop policy if exists "Accesso pubblico completo presenze" on public.presenze;
+drop policy if exists "Iscritti visibili solo autenticati" on public.iscritti;
+drop policy if exists "Iscritti inseribili solo autenticati" on public.iscritti;
+drop policy if exists "Iscritti modificabili solo autenticati" on public.iscritti;
+drop policy if exists "Iscritti eliminabili solo autenticati" on public.iscritti;
+drop policy if exists "Presenze visibili solo autenticati" on public.presenze;
+drop policy if exists "Presenze inseribili solo autenticati" on public.presenze;
+drop policy if exists "Presenze modificabili solo autenticati" on public.presenze;
+
+-- 5. POLICY SOLO PER UTENTI AUTENTICATI (authenticated)
+-- Tabella iscritti: SELECT, INSERT, UPDATE, DELETE solo per utenti autenticati
+create policy "Iscritti visibili solo autenticati"
   on public.iscritti
-  for all
-  to anon, authenticated
+  for select
+  to authenticated
+  using (true);
+
+create policy "Iscritti inseribili solo autenticati"
+  on public.iscritti
+  for insert
+  to authenticated
+  with check (true);
+
+create policy "Iscritti modificabili solo autenticati"
+  on public.iscritti
+  for update
+  to authenticated
   using (true)
   with check (true);
 
-drop policy if exists "Accesso pubblico completo presenze" on public.presenze;
-create policy "Accesso pubblico completo presenze"
+create policy "Iscritti eliminabili solo autenticati"
+  on public.iscritti
+  for delete
+  to authenticated
+  using (true);
+
+-- Tabella presenze: SELECT, INSERT, UPDATE solo per utenti autenticati
+create policy "Presenze visibili solo autenticati"
   on public.presenze
-  for all
-  to anon, authenticated
+  for select
+  to authenticated
+  using (true);
+
+create policy "Presenze inseribili solo autenticati"
+  on public.presenze
+  for insert
+  to authenticated
+  with check (true);
+
+create policy "Presenze modificabili solo autenticati"
+  on public.presenze
+  for update
+  to authenticated
   using (true)
   with check (true);

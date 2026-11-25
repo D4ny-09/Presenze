@@ -543,41 +543,46 @@ function saveDailyActivities(dateStr, activities) {
   localStorage.setItem(key, JSON.stringify(activities));
 }
 
-// 10. SUPABASE CLOUD (Collegamento Diretto e Sicuro al Database)
-const SUPABASE_URL = 'https://smwqsfupiveykagibxac.supabase.co';
-const SUPABASE_ANON_KEY =
+// 10. SUPABASE CLOUD (Collegamento Diretto e Autenticato al Database)
+const _FALLBACK_SUPABASE_URL = 'https://smwqsfupiveykagibxac.supabase.co';
+const _FALLBACK_SUPABASE_ANON_KEY =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNtd3FzZnVwaXZleWthZ2lieGFjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUyMDczMTEsImV4cCI6MjExMDc4MzMxMX0.36Ybgg0MWzKvNk8Leo1VNtb8q7ZJ8ovoIoaqrae6cvE';
 
-let _supabaseClientInstance = null;
+let _fallbackSupabaseClientInstance = null;
 
-function getSupabaseClient() {
-  if (typeof window.supabase === 'undefined' || !window.supabase.createClient) {
-    _supabaseClientInstance = null;
-    return null;
-  }
-  if (!_supabaseClientInstance) {
-    try {
-      _supabaseClientInstance = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    } catch (e) {
-      console.warn('Inizializzazione Supabase fallita:', e);
-      _supabaseClientInstance = null;
-    }
-  }
-  return _supabaseClientInstance;
-}
-
-function resetSupabaseClient() {
-  _supabaseClientInstance = null;
-}
+const getSupabaseClient =
+  typeof window.getSupabaseClient === 'function'
+    ? window.getSupabaseClient
+    : function () {
+        if (typeof window.supabase === 'undefined' || !window.supabase.createClient) {
+          _fallbackSupabaseClientInstance = null;
+          return null;
+        }
+        if (!_fallbackSupabaseClientInstance) {
+          try {
+            _fallbackSupabaseClientInstance = window.supabase.createClient(
+              _FALLBACK_SUPABASE_URL,
+              _FALLBACK_SUPABASE_ANON_KEY
+            );
+          } catch (e) {
+            console.warn('Inizializzazione Supabase fallita:', e);
+            _fallbackSupabaseClientInstance = null;
+          }
+        }
+        return _fallbackSupabaseClientInstance;
+      };
 
 // Funzione di retrocompatibilità
 function getStoredAnonKey() {
-  return SUPABASE_ANON_KEY;
+  return window.SUPABASE_ANON_KEY || _FALLBACK_SUPABASE_ANON_KEY;
 }
 
-function resetSupabaseClient() {
-  _supabaseClientInstance = null;
-}
+const resetSupabaseClient =
+  typeof window.resetSupabaseClient === 'function'
+    ? window.resetSupabaseClient
+    : function () {
+        _fallbackSupabaseClientInstance = null;
+      };
 
 async function syncRemoteSupabase(dateStr, onSyncedCallback) {
   const client = getSupabaseClient();
@@ -587,6 +592,12 @@ async function syncRemoteSupabase(dateStr, onSyncedCallback) {
   }
 
   try {
+    const { data: sessionData, error: sessionErr } = await client.auth.getSession();
+    if (sessionErr || !sessionData || !sessionData.session) {
+      if (onSyncedCallback) onSyncedCallback(false);
+      return;
+    }
+
     const { data: remotePeople, error: peopleErr } = await client
       .from('iscritti')
       .select('*')

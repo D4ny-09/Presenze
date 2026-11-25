@@ -509,7 +509,11 @@ function escapeHtml(str) {
 }
 
 // 8. INIZIALIZZAZIONE ALL'AVVIO
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  if (typeof window.whenAuthReady === 'function') {
+    const session = await window.whenAuthReady();
+    if (!session) return;
+  }
   initHeaderDateControls();
   initDatabaseSyncButton();
   initPersonModal();

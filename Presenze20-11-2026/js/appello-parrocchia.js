@@ -494,7 +494,11 @@ function escapeHtml(str) {
 }
 
 // 9. INIZIALIZZAZIONE ALL'AVVIO
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  if (typeof window.whenAuthReady === 'function') {
+    const session = await window.whenAuthReady();
+    if (!session) return;
+  }
   const btnTuttiPresenti = document.getElementById('btnOraTuttiPresenti');
   const btnNuovoIscritto = document.getElementById('btnOraNuovoIscritto');
   const btnExport = document.getElementById('btnOraExportCSV');

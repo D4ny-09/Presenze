@@ -19,6 +19,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="css/style.css">
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/auth.js"></script>
 
   <style>
@@ -154,7 +155,7 @@
             required
             autocomplete="username"
             autocapitalize="none"
-            placeholder="Inserisci il nome utente..."
+            placeholder="es. catechista, animatore o admin"
             autofocus
           >
         </div>
@@ -184,7 +185,7 @@
           <span id="loginErrorText">Nome utente o password non corretti.</span>
         </div>
 
-        <button type="submit" class="btn-primary btn-login-submit">
+        <button type="submit" id="btnLoginSubmit" class="btn-primary btn-login-submit">
           <i class="fa-solid fa-right-to-bracket"></i>
           <span>Accedi</span>
         </button>
@@ -200,6 +201,7 @@
       const errorBox = document.getElementById('loginErrorBox');
       const errorText = document.getElementById('loginErrorText');
       const loginForm = document.getElementById('loginForm');
+      const submitBtn = document.getElementById('btnLoginSubmit');
 
       [usernameInput, passwordInput].forEach((el) => {
         if (el) {
@@ -218,12 +220,23 @@
       }
 
       if (loginForm) {
-        loginForm.addEventListener('submit', (e) => {
+        loginForm.addEventListener('submit', async (e) => {
           e.preventDefault();
-          const res = window.loginWithCredentials(usernameInput.value, passwordInput.value);
+          errorBox.classList.remove('visible');
+
+          if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Accesso in corso...</span>';
+          }
+
+          const res = await window.loginWithUsername(usernameInput.value, passwordInput.value);
           if (res.ok) {
             window.location.replace(res.homePage);
           } else {
+            if (submitBtn) {
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> <span>Accedi</span>';
+            }
             errorText.textContent = res.error || 'Nome utente o password non validi.';
             errorBox.classList.add('visible');
             passwordInput.select();
