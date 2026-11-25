@@ -157,7 +157,7 @@
   }
 
   function canToggleUscitaFamiglia() {
-    return isAdmin();
+    return isAdmin() || isAnimatore();
   }
 
   function canToggleExtraAttributes() {

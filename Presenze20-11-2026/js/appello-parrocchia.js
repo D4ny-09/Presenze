@@ -365,7 +365,7 @@ window.toggleOratorioPresenceAttribute = function (personId, attr) {
 // 5. TOGGLE USCITA GENITORE
 window.toggleUscitaGenitore = function (personId) {
   if (typeof canToggleUscitaFamiglia === 'function' && !canToggleUscitaFamiglia()) {
-    showToast('Solo l\'amministratore può segnare l\'uscita.');
+    showToast('Non hai i permessi per segnare l\'uscita.');
     return;
   }
   const currentDate = getCurrentDate();

@@ -200,6 +200,29 @@
     .btn-phone-pill:hover {
       background-color: #d1fae5;
     }
+
+    /* Responsivo mobile: tabella catechismo compatta */
+    @media (max-width: 768px) {
+      .register-sheet-table th,
+      .register-sheet-table td {
+        padding: 8px 6px;
+        font-size: 0.78rem;
+      }
+
+      .class-summary-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .class-summary-card {
+        padding: 12px;
+      }
+
+      .cat-pill-btn {
+        padding: 10px 10px;
+        font-size: 0.8rem;
+      }
+    }
   </style>
 </head>
 <body>

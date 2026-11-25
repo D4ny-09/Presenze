@@ -69,6 +69,318 @@ body {
   input, select, textarea {
     font-size: 16px !important;
   }
+
+  /* ---- MIGLIORAMENTI MOBILE ---- */
+
+  /* Header più compatto su mobile */
+  .app-header {
+    padding: 10px 12px;
+  }
+
+  .header-icon {
+    width: 38px;
+    height: 38px;
+    font-size: 1.3rem;
+    border-radius: 10px;
+  }
+
+  .main-title {
+    font-size: 1.15rem;
+  }
+
+  .sub-title {
+    font-size: 0.74rem;
+  }
+
+  .header-controls {
+    gap: 6px;
+    padding: 5px 8px;
+  }
+
+  /* Pulsanti header con padding adeguato al tocco mobile (min 44px) */
+  .date-btn {
+    min-width: 40px;
+    min-height: 40px;
+    padding: 8px 10px;
+    font-size: 0.78rem;
+    justify-content: center;
+  }
+
+  .date-btn i {
+    font-size: 1rem;
+    padding: 2px;
+  }
+
+  .date-label {
+    display: none; /* Nasconde "Data:" su mobile per risparmiare spazio */
+  }
+
+  .date-input {
+    padding: 8px 6px;
+    font-size: 0.82rem;
+    min-height: 40px;
+  }
+
+  .db-status-btn,
+  .cloud-btn {
+    padding: 6px 10px;
+    font-size: 0.72rem;
+    min-height: 40px;
+  }
+
+  /* Tab di navigazione compatti su mobile */
+  .tab-nav {
+    gap: 6px;
+    padding: 8px 10px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tab-btn {
+    min-width: auto;
+    padding: 10px 12px;
+    font-size: 0.8rem;
+    gap: 6px;
+    border-radius: 10px;
+  }
+
+  .tab-btn i {
+    font-size: 1rem;
+    padding: 2px;
+  }
+
+  .tab-btn span {
+    display: none; /* Solo icone sui tab in mobile */
+  }
+
+  .nav-switch-discreet {
+    padding: 8px 10px;
+    font-size: 0.76rem;
+    gap: 6px;
+  }
+
+  .nav-switch-discreet span {
+    display: none; /* Solo icona su mobile */
+  }
+
+  .nav-switch-discreet i:last-child {
+    display: none; /* Nasconde la freccia → */
+  }
+
+  /* Contenitore principale con meno margine laterale */
+  .main-container {
+    margin: 10px auto;
+    padding: 0 8px;
+  }
+
+  .card-panel {
+    padding: 14px 12px;
+    border-radius: 12px;
+    margin-bottom: 10px;
+  }
+
+  /* Bottoni con icone: padding adeguato per il tocco su mobile */
+  .btn-add,
+  .btn-action-oratorio,
+  .btn-action-catechismo,
+  .btn-action-secondary {
+    min-height: 44px;
+    padding: 10px 14px;
+    font-size: 0.82rem;
+  }
+
+  .btn-add i,
+  .btn-action-oratorio i,
+  .btn-action-catechismo i,
+  .btn-action-secondary i {
+    font-size: 1rem;
+    padding: 2px;
+  }
+
+  /* Pulsanti P / A più grandi per il tocco */
+  .btn-pa {
+    width: 44px;
+    height: 42px;
+    font-size: 1.05rem;
+    border-radius: 8px;
+  }
+
+  .pa-group {
+    padding: 4px;
+    border-radius: 10px;
+    gap: 5px;
+  }
+
+  /* Pulsanti toggle (Messa, Uscita) più comodi */
+  .btn-reg-toggle {
+    min-height: 40px;
+    padding: 8px 10px;
+    font-size: 0.76rem;
+  }
+
+  .btn-reg-toggle i {
+    font-size: 0.9rem;
+    padding: 2px;
+  }
+
+  .btn-toggle-uscita {
+    min-height: 36px;
+    padding: 6px 10px;
+    font-size: 0.74rem;
+  }
+
+  /* Icona Modifica / Note con padding adeguato al tocco */
+  .btn-icon-edit {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    font-size: 1.1rem;
+  }
+
+  /* Tabella registro su mobile: celle più compatte */
+  .register-sheet-table th,
+  .register-sheet-table td {
+    padding: 10px 8px;
+    font-size: 0.82rem;
+  }
+
+  .register-table th,
+  .register-table td {
+    padding: 10px 8px;
+  }
+
+  /* Pillole classi più comode al tocco */
+  .ora-pill-btn,
+  .cat-pill-btn,
+  .class-pill-btn {
+    min-height: 44px;
+    padding: 10px 12px;
+  }
+
+  /* Badge telefoni con area di tocco sufficiente */
+  .btn-phone-pill {
+    min-height: 36px;
+    padding: 6px 10px;
+  }
+
+  /* Modale: riempie tutto lo schermo su mobile */
+  .modal-overlay {
+    padding: 8px;
+  }
+
+  .modal-container {
+    max-width: 100%;
+    max-height: 95vh;
+    border-radius: 14px;
+  }
+
+  .modal-header {
+    padding: 14px 16px;
+  }
+
+  .modal-form {
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .modal-close-btn {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+  }
+
+  /* Form input più alti per il tocco */
+  .form-input,
+  .form-select,
+  .form-textarea {
+    padding: 11px 12px;
+    min-height: 44px;
+  }
+
+  .form-actions {
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .form-actions .btn-primary,
+  .form-actions .btn-secondary,
+  .form-actions .btn-danger {
+    min-height: 44px;
+    padding: 10px 16px;
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+
+  /* Search input più grande */
+  .search-input {
+    min-height: 44px;
+    padding: 10px 14px;
+  }
+
+  /* Contatori più compatti */
+  .counters-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .counter-card {
+    padding: 10px 8px;
+  }
+
+  .counter-number {
+    font-size: 1.5rem;
+  }
+
+  /* Toast posizionamento mobile */
+  #app-toast {
+    left: 12px;
+    right: 12px;
+    bottom: 16px;
+    text-align: center;
+  }
+}
+
+/* Ultra-compact per schermi molto piccoli (< 480px) */
+@media (max-width: 480px) {
+  .header-brand {
+    gap: 8px;
+  }
+
+  .header-icon {
+    width: 34px;
+    height: 34px;
+    font-size: 1.1rem;
+  }
+
+  .main-title {
+    font-size: 1.05rem;
+  }
+
+  .header-controls {
+    justify-content: center;
+  }
+
+  /* Nasconde il testo "Oggi" nel bottone, mostra solo icona */
+  #btnToday span {
+    display: none;
+  }
+
+  /* Le pill-classi scorrono in orizzontale su schermi piccoli */
+  .oratorio-class-pills,
+  .cat-nav-pills {
+    scroll-snap-type: x mandatory;
+  }
+
+  .ora-pill-btn,
+  .cat-pill-btn {
+    scroll-snap-align: start;
+    flex-shrink: 0;
+  }
 }
 
 a {
