@@ -84,6 +84,18 @@
     return isAdmin() || isAnimatore();
   }
 
+  function canToggleMessa() {
+    return isAdmin() || isAnimatore() || isCatechista();
+  }
+
+  function canToggleOratorioFromCatechismo() {
+    return isAdmin() || isCatechista();
+  }
+
+  function canToggleUscitaFamiglia() {
+    return isAdmin();
+  }
+
   function canToggleExtraAttributes() {
     // Messa, Oratorio (da catechismo), Uscita Famiglia
     return isAdmin();
@@ -201,6 +213,9 @@
   window.canEditPeopleInfo = canEditPeopleInfo;
   window.canAddOrDeletePeople = canAddOrDeletePeople;
   window.canEditNotes = canEditNotes;
+  window.canToggleMessa = canToggleMessa;
+  window.canToggleOratorioFromCatechismo = canToggleOratorioFromCatechismo;
+  window.canToggleUscitaFamiglia = canToggleUscitaFamiglia;
   window.canToggleExtraAttributes = canToggleExtraAttributes;
   window.loginWithCredentials = loginWithCredentials;
   window.logoutUser = logoutUser;

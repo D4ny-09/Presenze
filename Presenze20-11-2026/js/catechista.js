@@ -390,7 +390,7 @@ function renderClassRegister(classObj, allKids, dayAttendance, currentDate) {
         <button
           type="button"
           class="btn-reg-toggle ${att.messa ? 'active-messa' : ''}"
-          ${(typeof canToggleExtraAttributes === 'function' && !canToggleExtraAttributes()) ? 'disabled style="cursor: not-allowed; opacity: 0.75;" title="Solo amministratore"' : `onclick="toggleCatechismoAttribute('${k.id}', 'messa')" title="Partecipazione alla S. Messa"`}
+          ${(typeof canToggleMessa === 'function' && !canToggleMessa()) ? 'disabled style="cursor: not-allowed; opacity: 0.75;" title="Non autorizzato"' : `onclick="toggleCatechismoAttribute('${k.id}', 'messa')" title="Partecipazione alla S. Messa"`}
         >
           <i class="fa-solid fa-cross"></i>
           <span>${att.messa ? 'Sì' : 'No'}</span>
@@ -402,7 +402,7 @@ function renderClassRegister(classObj, allKids, dayAttendance, currentDate) {
         <button
           type="button"
           class="btn-reg-toggle ${att.oratorio ? 'active-oratorio' : ''}"
-          ${(typeof canToggleExtraAttributes === 'function' && !canToggleExtraAttributes()) ? 'disabled style="cursor: not-allowed; opacity: 0.75;" title="Solo amministratore"' : `onclick="toggleCatechismoAttribute('${k.id}', 'oratorio')" title="Fermato per i giochi in cortile"`}
+          ${(typeof canToggleOratorioFromCatechismo === 'function' && !canToggleOratorioFromCatechismo()) ? 'disabled style="cursor: not-allowed; opacity: 0.75;" title="Non autorizzato"' : `onclick="toggleCatechismoAttribute('${k.id}', 'oratorio')" title="Fermato per i giochi in cortile"`}
         >
           <i class="fa-solid fa-volleyball"></i>
           <span>${att.oratorio ? 'Sì' : 'No'}</span>
@@ -495,7 +495,12 @@ window.markKidPresentFromHome = function (personId) {
 
 // 7. TOGGLE ATTRIBUTI (Messa / Oratorio)
 window.toggleCatechismoAttribute = function (personId, attr) {
-  if (typeof canToggleExtraAttributes === 'function' && !canToggleExtraAttributes()) {
+  const canToggleAttr = attr === 'messa'
+    ? (typeof canToggleMessa !== 'function' || canToggleMessa())
+    : attr === 'oratorio'
+      ? (typeof canToggleOratorioFromCatechismo !== 'function' || canToggleOratorioFromCatechismo())
+      : (typeof canToggleExtraAttributes !== 'function' || canToggleExtraAttributes());
+  if (!canToggleAttr) {
     showToast('Solo l\'amministratore può modificare questo campo.');
     return;
   }
@@ -542,7 +547,7 @@ function markAllClassPresent() {
 }
 
 function passClassToOratorio() {
-  if (typeof canToggleExtraAttributes === 'function' && !canToggleExtraAttributes()) {
+  if (typeof canToggleOratorioFromCatechismo === 'function' && !canToggleOratorioFromCatechismo()) {
     showToast('Solo l\'amministratore può usare questa funzione.');
     return;
   }
@@ -611,7 +616,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (btnMarkAll) btnMarkAll.addEventListener('click', markAllClassPresent);
   if (btnPassOra) {
-    if (typeof canToggleExtraAttributes === 'function' && !canToggleExtraAttributes()) {
+    if (typeof canToggleOratorioFromCatechismo === 'function' && !canToggleOratorioFromCatechismo()) {
       btnPassOra.style.display = 'none';
     } else {
       btnPassOra.addEventListener('click', passClassToOratorio);

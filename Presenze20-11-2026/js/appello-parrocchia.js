@@ -137,7 +137,8 @@ function renderAppelloOratorio() {
     }
 
     // Stato Uscita Genitore
-    const canExtra = typeof canToggleExtraAttributes === 'function' ? canToggleExtraAttributes() : true;
+    const canMessa = typeof canToggleMessa === 'function' ? canToggleMessa() : true;
+    const canUscita = typeof canToggleUscitaFamiglia === 'function' ? canToggleUscitaFamiglia() : true;
     const canFullEdit = typeof canEditPeopleInfo === 'function' ? canEditPeopleInfo() : true;
     const canNotes = typeof canEditNotes === 'function' ? canEditNotes() : true;
 
@@ -150,7 +151,7 @@ function renderAppelloOratorio() {
               <i class="fa-solid fa-person-walking-arrow-right"></i>
               Uscito ore ${escapeHtml(att.oraUscita || '--:--')}
             </strong>
-            ${canExtra ? `<button
+            ${canUscita ? `<button
               type="button"
               class="btn-toggle-uscita uscito"
               onclick="toggleUscitaGenitore('${k.id}')"
@@ -167,7 +168,7 @@ function renderAppelloOratorio() {
               <i class="fa-solid fa-circle-check"></i>
               In Cortile
             </span>
-            ${canExtra ? `<button
+            ${canUscita ? `<button
               type="button"
               class="btn-toggle-uscita"
               onclick="toggleUscitaGenitore('${k.id}')"
@@ -231,7 +232,7 @@ function renderAppelloOratorio() {
         <button
           type="button"
           class="btn-reg-toggle ${att.messa ? 'active-messa' : ''}"
-          ${!canExtra ? 'disabled style="cursor: not-allowed; opacity: 0.75;" title="Solo amministratore"' : `onclick="toggleOratorioPresenceAttribute('${k.id}', 'messa')" title="Partecipazione alla S. Messa"`}
+          ${!canMessa ? 'disabled style="cursor: not-allowed; opacity: 0.75;" title="Non autorizzato"' : `onclick="toggleOratorioPresenceAttribute('${k.id}', 'messa')" title="Partecipazione alla S. Messa"`}
         >
           <i class="fa-solid fa-cross"></i>
           <span>${att.messa ? 'Sì' : 'No'}</span>
@@ -335,7 +336,10 @@ window.setStudentOratorioPresence = function (personId, isPresent) {
 
 // 4. TOGGLE MESSA
 window.toggleOratorioPresenceAttribute = function (personId, attr) {
-  if (typeof canToggleExtraAttributes === 'function' && !canToggleExtraAttributes()) {
+  const canToggleAttr = attr === 'messa'
+    ? (typeof canToggleMessa !== 'function' || canToggleMessa())
+    : (typeof canToggleExtraAttributes !== 'function' || canToggleExtraAttributes());
+  if (!canToggleAttr) {
     showToast('Solo l\'amministratore può modificare questo campo.');
     return;
   }
@@ -360,7 +364,7 @@ window.toggleOratorioPresenceAttribute = function (personId, attr) {
 
 // 5. TOGGLE USCITA GENITORE
 window.toggleUscitaGenitore = function (personId) {
-  if (typeof canToggleExtraAttributes === 'function' && !canToggleExtraAttributes()) {
+  if (typeof canToggleUscitaFamiglia === 'function' && !canToggleUscitaFamiglia()) {
     showToast('Solo l\'amministratore può segnare l\'uscita.');
     return;
   }
