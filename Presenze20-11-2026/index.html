@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Attività di Oggi • Parrocchia Oratorio</title>
+
+  <!-- PWA & Mobile Web App Config -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#4f46e5">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Oratorio">
+  <link rel="apple-touch-icon" href="icons/icon.svg">
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+
+  <!-- Icone FontAwesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Foglio di Stile Globale -->
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/auth.js"></script>
+
+  <!-- ===================================================================
+       TAG <style>: Modifiche rapide per la HOME PARROCCHIA (HTML)
+       Personalizza qui sotto le attività, i colori e i blocchi del giorno!
+       =================================================================== -->
+  <style>
+    /* STILE SPECIFICO DELLA HOME ATTIVITÀ PARROCCHIA */
+    .activity-timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .activity-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+      transition: all 0.2s ease;
+    }
+
+    .activity-card:hover {
+      border-color: #cbd5e1;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    }
+
+    .activity-time-badge {
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-weight: 800;
+      font-size: 0.95rem;
+      text-align: center;
+      flex-shrink: 0;
+      min-width: 68px;
+    }
+
+    .activity-icon-circle {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      color: #4f46e5;
+      flex-shrink: 0;
+    }
+
+    .activity-body {
+      flex: 1;
+    }
+
+    .activity-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .activity-desc {
+      font-size: 0.85rem;
+      color: #64748b;
+      margin-top: 3px;
+    }
+
+    .allergy-alert-card {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-left: 5px solid #dc2626;
+      border-radius: 12px;
+      padding: 14px 18px;
+      margin-top: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===================================================================
+       1. HEADER CONDIVISO (Uguale per tutte le pagine)
+       =================================================================== -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="header-brand">
+        <div class="header-icon">
+          <i class="fa-solid fa-church"></i>
+        </div>
+        <div>
+          <h1 class="main-title">Registro Presenze</h1>
+          <p class="sub-title">Parrocchia • Attività in Oratorio & Catechismo</p>
+        </div>
+      </div>
+
+      <div class="header-controls">
+        <button type="button" id="btnSyncDatabase" class="date-btn db-status-btn" title="Stato Database: clicca per sincronizzare">
+          <span class="db-status-dot"></span>
+          <span id="supabaseStatus">Verifica Database...</span>
+        </button>
+
+        <button id="btnPrevDate" class="date-btn" title="Giorno precedente">
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+
+        <button id="btnToday" class="date-btn" title="Vai a oggi">
+          <i class="fa-solid fa-calendar-day"></i>
+          <span>Oggi</span>
+        </button>
+
+        <span class="date-label">Data:</span>
+        <input type="date" id="dataPicker" class="date-input" title="Seleziona data presenze">
+
+        <button id="btnNextDate" class="date-btn" title="Giorno successivo">
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===================================================================
+       2. BARRA DI NAVIGAZIONE A SCHEDE (Con cambio sezione DISCRETO anti-errore)
+       =================================================================== -->
+  <nav class="tab-nav-wrapper">
+    <div class="tab-nav">
+      <!-- 1. Attività del Giorno (Attiva) -->
+      <a href="index.html" class="tab-btn active" id="tabAttivita">
+        <i class="fa-solid fa-calendar-check"></i>
+        <span>Attività della Giornata</span>
+      </a>
+
+      <!-- 2. Appello Oratorio -->
+      <a href="appello-parrocchia.html" class="tab-btn" id="tabAppelloOratorio">
+        <i class="fa-solid fa-clipboard-user"></i>
+        <span>Appello Oratorio</span>
+      </a>
+
+      <!-- 3. Generatore Squadre -->
+      <a href="squadre.html" class="tab-btn" id="tabSquadre">
+        <i class="fa-solid fa-trophy"></i>
+        <span>Generatore Squadre</span>
+      </a>
+
+      <!-- SEZIONE CATECHISTE: Discreta e a destra per non schiacciarla per sbaglio -->
+      <a href="catechista.html" class="nav-switch-discreet" id="tabCatechista" title="Passa all'Area Catechiste (Registro Elettronico)">
+        <i class="fa-solid fa-chalkboard-user"></i>
+        <span>Area Catechiste</span>
+        <i class="fa-solid fa-arrow-right" style="font-size: 0.72rem; opacity: 0.7;"></i>
+      </a>
+    </div>
+  </nav>
+
+  <!-- ===================================================================
+       3. CONTENUTO PRINCIPALE: ATTIVITÀ DELLA GIORNATA
+       =================================================================== -->
+  <main class="main-container">
+
+    <!-- Banner Panoramica del Giorno -->
+    <section class="card-panel" style="background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%); color: #ffffff; padding: 22px; border-radius: 16px; margin-bottom: 18px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+        <div>
+          <span style="background: rgba(255, 255, 255, 0.2); padding: 4px 10px; border-radius: 12px; font-size: 0.74rem; font-weight: 700; text-transform: uppercase;">
+            Oratorio Parrocchiale
+          </span>
+          <h2 style="font-size: 1.45rem; font-weight: 800; margin-top: 6px;" id="parrocchiaDateTitle">
+            Attività della Giornata
+          </h2>
+          <p style="font-size: 0.85rem; color: #c7d2fe; margin-top: 2px;">
+            Programma, presenze in cortile e allerte per gli animatori
+          </p>
+        </div>
+
+        <!-- Scorciatoie veloci ai moduli -->
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <a href="appello-parrocchia.html" class="btn-primary" style="background: #ffffff; color: #4338ca; border-radius: 10px; padding: 10px 16px; font-size: 0.88rem; box-shadow: 0 4px 10px rgba(0,0,0,0.15);">
+            <i class="fa-solid fa-clipboard-user"></i>
+            <span>Vai all'Appello Oratorio →</span>
+          </a>
+          <a href="squadre.html" class="btn-action-oratorio" style="border-radius: 10px; padding: 10px 16px; font-size: 0.88rem;">
+            <i class="fa-solid fa-trophy"></i>
+            <span>Squadre Cortile</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Contatori Presenze Oggi -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-top: 18px;">
+        <div style="background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 12px; padding: 10px; text-align: center;">
+          <div style="font-size: 1.6rem; font-weight: 800; line-height: 1;" id="statCountOratorio">0</div>
+          <span style="font-size: 0.72rem; text-transform: uppercase; font-weight: 700; color: #fde68a;">Presenti in Oratorio</span>
+        </div>
+
+        <div style="background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 12px; padding: 10px; text-align: center;">
+          <div style="font-size: 1.6rem; font-weight: 800; line-height: 1;" id="statCountCatechismo">0</div>
+          <span style="font-size: 0.72rem; text-transform: uppercase; font-weight: 700; color: #bae6fd;">A Catechismo</span>
+        </div>
+
+        <div style="background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 12px; padding: 10px; text-align: center;">
+          <div style="font-size: 1.6rem; font-weight: 800; line-height: 1;" id="statCountMessa">0</div>
+          <span style="font-size: 0.72rem; text-transform: uppercase; font-weight: 700; color: #e9d5ff;">A S. Messa</span>
+        </div>
+
+        <div style="background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 12px; padding: 10px; text-align: center;">
+          <div style="font-size: 1.6rem; font-weight: 800; line-height: 1;" id="statCountIscritti">0</div>
+          <span style="font-size: 0.72rem; text-transform: uppercase; font-weight: 700; color: #ffffff;">Iscritti Totali</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sezione Programma e Attività della Giornata -->
+    <section class="card-panel">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+        <h3 style="font-size: 1.15rem; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-clock" style="color: #4f46e5;"></i>
+          Programma e Attività di Oggi:
+        </h3>
+        <button type="button" id="btnOpenNewActivityModal" class="btn-add" style="padding: 7px 12px; font-size: 0.82rem; border-radius: 8px;">
+          <i class="fa-solid fa-plus"></i>
+          <span>Aggiungi Attività / Avviso</span>
+        </button>
+      </div>
+
+      <div id="activitiesTimeline" class="activity-timeline"></div>
+    </section>
+
+    <!-- Sezione Allerte Merenda & Allergie dei Presenti Oggi -->
+    <section class="card-panel">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+        <h3 style="font-size: 1.1rem; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-triangle-exclamation" style="color: #dc2626;"></i>
+          Allerte Merenda & Allergie (Ragazzi Presenti Oggi)
+        </h3>
+        <span style="font-size: 0.8rem; color: #64748b;">
+          Per chi gestisce la merenda in cucina o cortile
+        </span>
+      </div>
+
+      <div id="allergiesTodayList"></div>
+    </section>
+
+  </main>
+
+  <!-- ===================================================================
+       4. MODALE AGGIUNGI ATTIVITÀ DEL GIORNO
+       =================================================================== -->
+  <div id="activityModal" class="modal-overlay">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h2 class="modal-title">Aggiungi Attività / Avviso del Giorno</h2>
+        <button type="button" id="closeActivityModal" class="modal-close-btn">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="activityForm" class="modal-form">
+        <div class="form-group">
+          <label for="inputActOra">Orario *</label>
+          <input type="text" id="inputActOra" class="form-input" required placeholder="Es. 16:30 o Dalle 15:00">
+        </div>
+
+        <div class="form-group">
+          <label for="inputActTitolo">Titolo Attività *</label>
+          <input type="text" id="inputActTitolo" class="form-input" required placeholder="Es. Torneo di Ping Pong, Prove Canti...">
+        </div>
+
+        <div class="form-group">
+          <label for="inputActDesc">Descrizione / Note per gli animatori</label>
+          <textarea id="inputActDesc" class="form-textarea" rows="3" placeholder="Dettagli sullo svolgimento, luogo o materiali necessari"></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" id="cancelActivityModal" class="btn-secondary">Annulla</button>
+          <button type="submit" class="btn-primary">
+            <i class="fa-solid fa-floppy-disk"></i>
+            <span>Salva Attività</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===================================================================
+       5. MODALE ISCRIZIONE CON TELEFONI MULTIPLI
+       =================================================================== -->
+  <div id="personModal" class="modal-overlay">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h2 id="personModalTitle" class="modal-title">Nuovo Iscritto</h2>
+        <button type="button" id="closePersonModal" class="modal-close-btn">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="personForm" class="modal-form">
+        <div class="form-group">
+          <label for="inputNome">Nome *</label>
+          <input type="text" id="inputNome" class="form-input" required placeholder="Inserisci il nome">
+        </div>
+
+        <div class="form-group">
+          <label for="inputCognome">Cognome *</label>
+          <input type="text" id="inputCognome" class="form-input" required placeholder="Inserisci il cognome">
+        </div>
+
+        <div class="form-group">
+          <label for="selectRuolo">Ruolo</label>
+          <select id="selectRuolo" class="form-select">
+            <option value="Bambino">Bambino</option>
+            <option value="Animatore">Animatore</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="selectAnno">Classe Oratorio (1ª Elementare - 3ª Media)</label>
+          <select id="selectAnno" class="form-select">
+            <option value="prima">1ª Elementare</option>
+            <option value="seconda">2ª Elementare</option>
+            <option value="terza">3ª Elementare</option>
+            <option value="quarta">4ª Elementare</option>
+            <option value="quinta">5ª Elementare</option>
+            <option value="primaMedia">1ª Media</option>
+            <option value="secondaMedia">2ª Media</option>
+            <option value="terzaMedia">3ª Media</option>
+            <option value="animatore">Animatore / Staff</option>
+          </select>
+        </div>
+
+        <div class="form-group checkbox-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="inputCatechismo" checked>
+            <span>Frequenta anche il Catechismo</span>
+          </label>
+        </div>
+
+        <!-- SEZIONE TELEFONI MULTIPLI -->
+        <div class="form-group" style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 10px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <label style="font-weight: 700; color: #0f172a; margin-bottom: 0;">
+              <i class="fa-solid fa-phone" style="color: #10b981;"></i> Numeri di Telefono (Genitori / Contatti):
+            </label>
+            <button type="button" id="btnAddPhoneField" style="background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; border-radius: 6px; padding: 4px 8px; font-size: 0.76rem; font-weight: 700; cursor: pointer;">
+              + Aggiungi Numero
+            </button>
+          </div>
+          <div id="phonesContainer"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="inputAllergie">Allergie / Intolleranze alimentari</label>
+          <input type="text" id="inputAllergie" class="form-input" placeholder="Es. Lattosio, Glutine (Celiachia), Frutta a guscio...">
+        </div>
+
+        <div class="form-group">
+          <label for="inputDeleghe">Uscite / Deleghe</label>
+          <input type="text" id="inputDeleghe" class="form-input" placeholder="Es. Esce con la nonna, Ritiro papà, Torna da solo...">
+        </div>
+
+        <div class="form-group">
+          <label for="inputNote">Note aggiuntive</label>
+          <textarea id="inputNote" class="form-textarea" rows="2" placeholder="Note per catechisti ed educatori"></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" id="deletePersonBtn" class="btn-danger" style="display: none;">
+            <i class="fa-solid fa-trash-can"></i>
+            <span>Elimina</span>
+          </button>
+          <button type="button" id="cancelPersonModal" class="btn-secondary">Annulla</button>
+          <button type="submit" class="btn-primary">
+            <i class="fa-solid fa-floppy-disk"></i>
+            <span>Salva</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ===================================================================
+       7. NOTIFICA TOAST
+       =================================================================== -->
+  <div id="app-toast"></div>
+
+  <!-- ===================================================================
+       8. SCRIPT JS
+       =================================================================== -->
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/parrocchia.js"></script>
+</body>
+</html>
