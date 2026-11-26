@@ -50,7 +50,11 @@ function renderCatechista() {
     badgeTotaleAssenti.style.color = absentKidsToday.length > 0 ? '#ffffff' : 'inherit';
   }
 
-  // Render Pillole Classi nella barra superiore
+  // Render Pillole Classi nella barra superiore (visibili solo nella Home; nascoste quando una classe è selezionata)
+  const navPillsContainer = document.getElementById('catNavPillsContainer');
+  if (navPillsContainer) {
+    navPillsContainer.style.display = currentSection === 'home' ? 'flex' : 'none';
+  }
   renderClassPills(catechismoKids, currentDate);
 
   const viewHome = document.getElementById('viewHomeAssenti');
@@ -225,8 +229,33 @@ function renderHomeAssenti(allKids, absentKids, currentDate) {
   }
 }
 
-// 4. RENDERING DEL REGISTRO DI UNA SINGOLA CLASSE
+// 4. POPOLA IL MENU A TENDINA IN ALTO A DESTRA PER SPOSTARSI TRA LE CLASSI
+function renderClassSwitcherDropdown(activeClassObj) {
+  const select = document.getElementById('classSwitcherSelect');
+  if (!select) return;
+
+  select.innerHTML = '';
+
+  CATECHISMO_CLASSES.forEach((c) => {
+    const opt = document.createElement('option');
+    opt.value = c.id;
+    opt.textContent = c.id === activeClassObj.id ? `✓ ${c.label} (Attuale)` : c.label;
+    if (c.id === activeClassObj.id) {
+      opt.selected = true;
+    }
+    select.appendChild(opt);
+  });
+
+  const homeOpt = document.createElement('option');
+  homeOpt.value = 'home';
+  homeOpt.textContent = '🏠 Assenti del Giorno';
+  select.appendChild(homeOpt);
+}
+
+// 5. RENDERING DEL REGISTRO DI UNA SINGOLA CLASSE
 function renderClassRegister(classObj, allKids, dayAttendance, currentDate) {
+  renderClassSwitcherDropdown(classObj);
+
   const classKids = allKids
     .filter((k) => k.anno === classObj.id)
     .sort((a, b) => (a.cognome || '').localeCompare(b.cognome || ''));
@@ -277,8 +306,10 @@ function renderClassRegister(classObj, allKids, dayAttendance, currentDate) {
   // Filtra con eventuale ricerca
   const filtered = classKids.filter((k) => {
     if (!classSearchQuery.trim()) return true;
+    const att = dayAttendance[k.id] || {};
+    const daily = parseDailyNoteAndExit(att.noteGiorno || '');
     const q = classSearchQuery.toLowerCase().trim();
-    return `${k.cognome} ${k.nome} ${k.allergie || ''} ${k.deleghe || ''}`.toLowerCase().includes(q);
+    return `${k.cognome} ${k.nome} ${k.allergie || ''} ${k.deleghe || ''} ${k.note || ''} ${daily.uscita} ${daily.note}`.toLowerCase().includes(q);
   });
 
   if (filtered.length === 0) {
@@ -293,6 +324,7 @@ function renderClassRegister(classObj, allKids, dayAttendance, currentDate) {
   filtered.forEach((k, idx) => {
     const isPresent = isStudentCatechismoPresent(currentDate, k.id);
     const att = dayAttendance[k.id] || {};
+    const daily = parseDailyNoteAndExit(att.noteGiorno || '');
     const initials = `${(k.nome || 'A').charAt(0)}${(k.cognome || 'B').charAt(0)}`.toUpperCase();
     const phones = getPersonPhones(k);
 
@@ -316,40 +348,80 @@ function renderClassRegister(classObj, allKids, dayAttendance, currentDate) {
         `
         )
         .join('');
+    } else {
+      phonesHtml = `<span style="color: #94a3b8; font-size: 0.75rem;">—</span>`;
     }
 
-    // Badge Allergie / Deleghe
-    let alertsHtml = '';
-    if (k.allergie || k.deleghe || k.note) {
-      alertsHtml = `
-        <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;">
-          ${k.allergie ? `
-            <span style="background: #fee2e2; border: 1px solid #fecaca; color: #991b1b; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
-              <i class="fa-solid fa-triangle-exclamation"></i> ${escapeHtml(k.allergie)}
-            </span>
-          ` : ''}
-          ${k.deleghe ? `
-            <span style="background: #fef3c7; border: 1px solid #fcd34d; color: #92400e; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
-              <i class="fa-solid fa-clock"></i> ${escapeHtml(k.deleghe)}
-            </span>
-          ` : ''}
-          ${k.note ? `
-            <span style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem;">
-              ${escapeHtml(k.note)}
-            </span>
-          ` : ''}
-        </div>
-      `;
+    // Badge Allergie sotto al nome
+    const allergyHtml = k.allergie ? `
+      <div style="margin-top: 4px;">
+        <span style="background: #fee2e2; border: 1px solid #fecaca; color: #991b1b; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+          <i class="fa-solid fa-triangle-exclamation"></i> ${escapeHtml(k.allergie)}
+        </span>
+      </div>
+    ` : '';
+
+    // Stato Uscita (allineato con Appello Oratorio)
+    let uscitaCellHtml = '';
+    if (att.oratorio) {
+      if (att.uscito) {
+        uscitaCellHtml = `
+          <strong style="color: #b91c1c; font-size: 0.78rem; display: inline-flex; align-items: center; gap: 4px;">
+            <i class="fa-solid fa-person-walking-arrow-right"></i>
+            Uscito ${escapeHtml(att.oraUscita || '--:--')}
+          </strong>
+        `;
+      } else {
+        uscitaCellHtml = `
+          <span style="color: #15803d; font-size: 0.78rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+            <i class="fa-solid fa-circle-check"></i>
+            In Cortile
+          </span>
+        `;
+      }
+    } else {
+      uscitaCellHtml = `<span style="color: #94a3b8; font-size: 0.78rem;">—</span>`;
+    }
+
+    // Colonna Note (Uscite/Deleghe + Note annuali e giornaliere)
+    const noteBadges = [];
+    if (daily.uscita) {
+      noteBadges.push(`
+        <span class="note-badge-multiline" style="background: #ffedd5; border: 1px solid #fdba74; color: #9a3412; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+          <i class="fa-solid fa-clock"></i> Oggi: ${escapeHtml(daily.uscita)}
+        </span>
+      `);
+    }
+    if (k.deleghe) {
+      noteBadges.push(`
+        <span class="note-badge-multiline" style="background: #fef3c7; border: 1px solid #fcd34d; color: #92400e; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+          <i class="fa-solid fa-door-open"></i> ${escapeHtml(k.deleghe)}
+        </span>
+      `);
+    }
+    if (daily.note) {
+      noteBadges.push(`
+        <span class="note-badge-multiline" style="background: #e0e7ff; border: 1px solid #c7d2fe; color: #3730a3; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 600;">
+          Oggi: ${escapeHtml(daily.note)}
+        </span>
+      `);
+    }
+    if (k.note) {
+      noteBadges.push(`
+        <span class="note-badge-multiline" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem;">
+          ${escapeHtml(k.note)}
+        </span>
+      `);
     }
 
     tr.innerHTML = `
       <!-- N° Progressivo -->
-      <td style="text-align: center; font-weight: 800; color: #64748b;">
+      <td class="col-num" style="font-weight: 800; color: #64748b;">
         ${idx + 1}
       </td>
 
-      <!-- Alunno -->
-      <td>
+      <!-- Ragazzo -->
+      <td class="col-ragazzo">
         <div style="display: flex; align-items: center; gap: 10px;">
           <div style="width: 34px; height: 34px; border-radius: 8px; background: ${isPresent ? '#dcfce7' : '#fee2e2'}; color: ${isPresent ? '#15803d' : '#b91c1c'}; font-weight: 800; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; border: 1px solid ${isPresent ? '#86efac' : '#fca5a5'}; flex-shrink: 0;">
             ${initials}
@@ -358,13 +430,13 @@ function renderClassRegister(classObj, allKids, dayAttendance, currentDate) {
             <div style="font-size: 0.95rem; font-weight: 800; color: #0f172a; line-height: 1.2;">
               ${escapeHtml(k.cognome).toUpperCase()} ${escapeHtml(k.nome)}
             </div>
-            ${alertsHtml}
+            ${allergyHtml}
           </div>
         </div>
       </td>
 
-      <!-- Appello P / A (Tutti presenti di default, cliccando su A diventano assenti!) -->
-      <td style="text-align: center;">
+      <!-- Appello P / A -->
+      <td class="col-appello">
         <div class="pa-group">
           <button
             type="button"
@@ -386,7 +458,7 @@ function renderClassRegister(classObj, allKids, dayAttendance, currentDate) {
       </td>
 
       <!-- Messa -->
-      <td style="text-align: center;">
+      <td class="col-messa">
         <button
           type="button"
           class="btn-reg-toggle ${att.messa ? 'active-messa' : ''}"
@@ -397,8 +469,8 @@ function renderClassRegister(classObj, allKids, dayAttendance, currentDate) {
         </button>
       </td>
 
-      <!-- Oratorio -->
-      <td style="text-align: center;">
+      <!-- Oratorio (Zona Catechiste) -->
+      <td class="col-oratorio">
         <button
           type="button"
           class="btn-reg-toggle ${att.oratorio ? 'active-oratorio' : ''}"
@@ -409,10 +481,24 @@ function renderClassRegister(classObj, allKids, dayAttendance, currentDate) {
         </button>
       </td>
 
-      <!-- Telefoni Famiglia & Azioni -->
-      <td>
-        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+      <!-- Stato Uscita -->
+      <td class="col-uscita">
+        ${uscitaCellHtml}
+      </td>
+
+      <!-- Telefoni -->
+      <td class="col-telefoni">
+        <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
           ${phonesHtml}
+        </div>
+      </td>
+
+      <!-- Note -->
+      <td class="col-note">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+          <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+            ${noteBadges.length > 0 ? noteBadges.join('') : '<span style="color: #94a3b8; font-size: 0.75rem;">—</span>'}
+          </div>
           ${(typeof canEditPeopleInfo === 'function' && canEditPeopleInfo()) ? `
           <button
             type="button"
@@ -430,7 +516,7 @@ function renderClassRegister(classObj, allKids, dayAttendance, currentDate) {
   });
 }
 
-// 5. PILLOLE DELLE CLASSI DI CATECHISMO
+// 6. PILLOLE DELLE CLASSI DI CATECHISMO
 function renderClassPills(allKids, currentDate) {
   const container = document.getElementById('catClassPills');
   const pillHome = document.getElementById('pillHomeAssenti');
@@ -464,9 +550,53 @@ function renderClassPills(allKids, currentDate) {
 
     container.appendChild(btn);
   });
+
+  // Popola anche il selettore classi nella barra laterale mobile
+  const sidebarClasses = document.getElementById('mobileSidebarClasses');
+  if (sidebarClasses) {
+    const absentTot = allKids.filter((k) => !isStudentCatechismoPresent(currentDate, k.id)).length;
+    sidebarClasses.innerHTML = `
+      <div class="mobile-sidebar-classes-title">
+        <i class="fa-solid fa-graduation-cap" style="color: #4f46e5;"></i>
+        <span>Classi Catechismo</span>
+      </div>
+      <div class="mobile-sidebar-class-list" id="mobileSidebarClassList"></div>
+    `;
+    const listEl = sidebarClasses.querySelector('#mobileSidebarClassList');
+
+    const homeBtn = document.createElement('button');
+    homeBtn.type = 'button';
+    homeBtn.className = `mobile-sidebar-class-btn ${currentSection === 'home' ? 'active' : ''}`;
+    homeBtn.innerHTML = `
+      <span>🏠 Assenti del Giorno</span>
+      <span class="mobile-sidebar-class-count">${absentTot}</span>
+    `;
+    homeBtn.onclick = () => {
+      if (typeof window.closeMobileSidebar === 'function') window.closeMobileSidebar();
+      showCatechistaSection('home');
+    };
+    listEl.appendChild(homeBtn);
+
+    CATECHISMO_CLASSES.forEach((c) => {
+      const kidsInClass = allKids.filter((k) => k.anno === c.id);
+      const isActive = currentSection === c.id;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = `mobile-sidebar-class-btn ${isActive ? 'active' : ''}`;
+      btn.innerHTML = `
+        <span>${c.label}</span>
+        <span class="mobile-sidebar-class-count">${kidsInClass.length}</span>
+      `;
+      btn.onclick = () => {
+        if (typeof window.closeMobileSidebar === 'function') window.closeMobileSidebar();
+        showCatechistaSection(c.id);
+      };
+      listEl.appendChild(btn);
+    });
+  }
 }
 
-// 6. TOGGLE PRESENZA P / A (Tutti presenti di default, se clicco A diventa assente!)
+// 7. TOGGLE PRESENZA P / A (Tutti presenti di default, se clicco A diventa assente!)
 window.setStudentCatechismoPresence = function (personId, isPresent) {
   const currentDate = getCurrentDate();
   const dayAtt = getDayAttendance(currentDate);
@@ -493,7 +623,7 @@ window.markKidPresentFromHome = function (personId) {
   showToast('Alunno segnato presente a lezione!');
 };
 
-// 7. TOGGLE ATTRIBUTI (Messa / Oratorio)
+// 8. TOGGLE ATTRIBUTI (Messa / Oratorio)
 window.toggleCatechismoAttribute = function (personId, attr) {
   const canToggleAttr = attr === 'messa'
     ? (typeof canToggleMessa !== 'function' || canToggleMessa())
@@ -523,7 +653,7 @@ window.toggleCatechismoAttribute = function (personId, attr) {
   renderCatechista();
 };
 
-// 8. AZIONI RAPIDE CLASSE
+// 9. AZIONI RAPIDE CLASSE
 function markAllClassPresent() {
   const currentDate = getCurrentDate();
   const people = getPeople();
@@ -580,7 +710,7 @@ function passClassToOratorio() {
   }
 }
 
-// 9. UTILITY DATA IN ITALIANO
+// 10. UTILITY DATA IN ITALIANO
 function formatItalianDate(dateStr) {
   if (!dateStr) return '';
   const parts = dateStr.split('-');
@@ -605,7 +735,7 @@ function escapeHtml(str) {
     .replace(/'/g, '&#39;');
 }
 
-// 10. INIZIALIZZAZIONE EVENTI
+// 11. INIZIALIZZAZIONE EVENTI
 document.addEventListener('DOMContentLoaded', async () => {
   if (typeof window.whenAuthReady === 'function') {
     const session = await window.whenAuthReady();
@@ -617,6 +747,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   const btnEmptyNewKid = document.getElementById('btnEmptyNewKid');
   const btnPrint = document.getElementById('btnPrintClass');
   const searchInput = document.getElementById('classSearchInput');
+  const classSwitcher = document.getElementById('classSwitcherSelect');
+
+  if (classSwitcher) {
+    classSwitcher.addEventListener('change', (e) => {
+      if (e.target.value) {
+        showCatechistaSection(e.target.value);
+      }
+    });
+  }
 
   if (btnMarkAll) btnMarkAll.addEventListener('click', markAllClassPresent);
   if (btnPassOra) {

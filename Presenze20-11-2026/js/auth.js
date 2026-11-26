@@ -157,6 +157,10 @@
   }
 
   function canToggleUscitaFamiglia() {
+    return isAdmin() || isAnimatore();
+  }
+
+  function canEditDailyActivities() {
     return isAdmin();
   }
 
@@ -416,6 +420,7 @@
   window.canToggleMessa = canToggleMessa;
   window.canToggleOratorioFromCatechismo = canToggleOratorioFromCatechismo;
   window.canToggleUscitaFamiglia = canToggleUscitaFamiglia;
+  window.canEditDailyActivities = canEditDailyActivities;
   window.canToggleExtraAttributes = canToggleExtraAttributes;
   window.loginWithUsername = loginWithUsername;
   window.logoutUser = logoutUser;
