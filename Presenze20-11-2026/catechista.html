@@ -361,6 +361,15 @@
       
       <!-- Intestazione della Classe -->
       <section class="card-panel" style="background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%); color: #ffffff; padding: 18px 20px; border-radius: 14px; margin-bottom: 14px;">
+        <div class="cat-class-switcher-row" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 10px;">
+          <div style="font-size: 0.78rem; color: #e0f2fe; font-weight: 600;">
+            La tua classe selezionata
+          </div>
+          <div class="cat-class-switcher">
+            <label for="classSwitcherSelect" style="font-size: 0.76rem; font-weight: 700; color: #e0f2fe;">Altre classi:</label>
+            <select id="classSwitcherSelect" class="cat-class-select" title="Spostati in un'altra classe"></select>
+          </div>
+        </div>
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
           <div>
             <div style="display: flex; align-items: center; gap: 8px;">
@@ -448,14 +457,16 @@
       <section class="card-panel" style="padding: 0; overflow: hidden;">
         <div style="overflow-x: auto;">
           <table class="register-sheet-table" id="registerClassTable">
-            <thead>
+                        <thead>
               <tr>
-                <th style="width: 44px; text-align: center;">N°</th>
-                <th>Alunno</th>
-                <th style="width: 110px; text-align: center;">Appello (P/A)</th>
-                <th style="width: 90px; text-align: center;">Messa</th>
-                <th style="width: 100px; text-align: center;">Oratorio</th>
-                <th>Telefoni Famiglia & Note</th>
+                <th class="col-num">N°</th>
+                <th class="col-ragazzo">Ragazzo</th>
+                <th class="col-appello">Appello</th>
+                <th class="col-messa">Messa</th>
+                <th class="col-oratorio">Oratorio</th>
+                <th class="col-uscita">Stato Uscita</th>
+                <th class="col-telefoni">Telefoni</th>
+                <th class="col-note">Note</th>
               </tr>
             </thead>
             <tbody id="registerClassTableBody"></tbody>
@@ -584,6 +595,7 @@
   <!-- ===================================================================
        7. SCRIPT JS
        =================================================================== -->
+  <script src="js/version.js"></script>
   <script src="js/data.js"></script>
   <script src="js/app.js"></script>
   <script src="js/catechista.js"></script>

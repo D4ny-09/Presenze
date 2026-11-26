@@ -61,8 +61,8 @@ function renderActivitiesTimeline(currentDate) {
     return;
   }
 
-  const canAdmin = typeof isAdmin === 'function' ? isAdmin() : true;
-  activities.forEach((act, idx) => {
+  const canEdit = typeof canEditDailyActivities === 'function' ? canEditDailyActivities() : true;
+  activities.forEach((act) => {
     const card = document.createElement('div');
     card.className = 'activity-card';
 
@@ -78,14 +78,24 @@ function renderActivitiesTimeline(currentDate) {
       <div class="activity-body">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
           <h4 class="activity-title">${escapeHtml(act.titolo)}</h4>
-          ${canAdmin ? `<button
-            type="button"
-            onclick="removeActivity('${act.id}')"
-            style="background: transparent; border: none; color: #94a3b8; cursor: pointer; padding: 4px; font-size: 0.85rem;"
-            title="Rimuovi attività"
-          >
-            <i class="fa-solid fa-trash-can"></i>
-          </button>` : ''}
+          ${canEdit ? `<div style="display: flex; align-items: center; gap: 4px; flex-shrink: 0;">
+            <button
+              type="button"
+              onclick="editActivity('${act.id}')"
+              style="background: transparent; border: none; color: #4f46e5; cursor: pointer; padding: 4px 6px; font-size: 0.88rem;"
+              title="Modifica attività"
+            >
+              <i class="fa-solid fa-pen-to-square"></i>
+            </button>
+            <button
+              type="button"
+              onclick="removeActivity('${act.id}')"
+              style="background: transparent; border: none; color: #94a3b8; cursor: pointer; padding: 4px 6px; font-size: 0.85rem;"
+              title="Rimuovi attività"
+            >
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>` : ''}
         </div>
         <p class="activity-desc">${escapeHtml(act.desc || '')}</p>
       </div>
@@ -97,8 +107,8 @@ function renderActivitiesTimeline(currentDate) {
 
 // 3. RIMOZIONE ATTIVITÀ
 window.removeActivity = function (actId) {
-  if (typeof isAdmin === 'function' && !isAdmin()) {
-    showToast('Solo l\'amministratore può rimuovere le attività.');
+  if (typeof canEditDailyActivities === 'function' && !canEditDailyActivities()) {
+    showToast('Non hai i permessi per rimuovere le attività.');
     return;
   }
   const currentDate = getCurrentDate();
@@ -159,7 +169,33 @@ function renderAllergiesToday(people, dayAttendance) {
   container.innerHTML = html;
 }
 
-// 5. MODALE AGGIUNTA ATTIVITÀ DEL GIORNO
+// 5. MODALE AGGIUNTA / MODIFICA ATTIVITÀ DEL GIORNO
+let currentEditingActivityId = null;
+
+window.editActivity = function (actId) {
+  if (typeof canEditDailyActivities === 'function' && !canEditDailyActivities()) {
+    showToast('Non hai i permessi per modificare le attività.');
+    return;
+  }
+  const modal = document.getElementById('activityModal');
+  if (!modal) return;
+
+  const currentDate = getCurrentDate();
+  const act = getDailyActivities(currentDate).find((a) => a.id === actId);
+  if (!act) return;
+
+  currentEditingActivityId = act.id;
+  const titleEl = modal.querySelector('.modal-title');
+  if (titleEl) titleEl.textContent = 'Modifica Attività / Avviso';
+
+  document.getElementById('inputActOra').value = act.ora || '';
+  document.getElementById('inputActTitolo').value = act.titolo || '';
+  document.getElementById('inputActDesc').value = act.desc || '';
+
+  modal.classList.add('open');
+  document.getElementById('inputActOra').focus();
+};
+
 function initActivityModal() {
   const modal = document.getElementById('activityModal');
   const btnOpen = document.getElementById('btnOpenNewActivityModal');
@@ -171,14 +207,19 @@ function initActivityModal() {
 
   function closeModal() {
     modal.classList.remove('open');
+    currentEditingActivityId = null;
     if (form) form.reset();
   }
 
   if (btnOpen) {
-    if (typeof isAdmin === 'function' && !isAdmin()) {
+    if (typeof canEditDailyActivities === 'function' && !canEditDailyActivities()) {
       btnOpen.style.display = 'none';
     } else {
       btnOpen.addEventListener('click', () => {
+        currentEditingActivityId = null;
+        const titleEl = modal.querySelector('.modal-title');
+        if (titleEl) titleEl.textContent = 'Aggiungi Attività / Avviso del Giorno';
+        if (form) form.reset();
         modal.classList.add('open');
         document.getElementById('inputActOra').focus();
       });
@@ -206,18 +247,33 @@ function initActivityModal() {
       }
 
       const activities = getDailyActivities(currentDate);
-      activities.push({
-        id: `act_${Date.now()}`,
-        ora,
-        titolo,
-        icona: 'fa-star',
-        desc,
-      });
-
-      saveDailyActivities(currentDate, activities);
-      closeModal();
-      renderActivitiesTimeline(currentDate);
-      showToast('Attività aggiunta alla giornata!');
+      if (currentEditingActivityId) {
+        const idx = activities.findIndex((a) => a.id === currentEditingActivityId);
+        if (idx >= 0) {
+          activities[idx] = {
+            ...activities[idx],
+            ora,
+            titolo,
+            desc,
+          };
+        }
+        saveDailyActivities(currentDate, activities);
+        closeModal();
+        renderActivitiesTimeline(currentDate);
+        showToast('Attività aggiornata!');
+      } else {
+        activities.push({
+          id: `act_${Date.now()}`,
+          ora,
+          titolo,
+          icona: 'fa-star',
+          desc,
+        });
+        saveDailyActivities(currentDate, activities);
+        closeModal();
+        renderActivitiesTimeline(currentDate);
+        showToast('Attività aggiunta alla giornata!');
+      }
     });
   }
 }

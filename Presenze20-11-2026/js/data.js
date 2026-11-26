@@ -413,6 +413,31 @@ function isStudentCatechismoPresent(dateStr, personId) {
   return true;
 }
 
+function parseDailyNoteAndExit(noteGiornoStr) {
+  const raw = (noteGiornoStr || '').trim();
+  if (!raw) return { uscita: '', note: '' };
+  if (raw.startsWith('{')) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed && (typeof parsed.uscita === 'string' || typeof parsed.note === 'string')) {
+        return {
+          uscita: (parsed.uscita || '').trim(),
+          note: (parsed.note || '').trim(),
+        };
+      }
+    } catch (e) {}
+  }
+  return { uscita: '', note: raw };
+}
+
+function serializeDailyNoteAndExit(uscitaStr, noteStr) {
+  const uscita = (uscitaStr || '').trim();
+  const note = (noteStr || '').trim();
+  if (!uscita && !note) return '';
+  if (!uscita) return note;
+  return JSON.stringify({ uscita, note });
+}
+
 function savePersonAttendance(dateStr, personId, record) {
   const all = getAllAttendance();
   if (!all[dateStr]) {
@@ -526,21 +551,44 @@ const DEFAULT_ACTIVITIES = [
   },
 ];
 
+const GLOBAL_ACTIVITIES_KEY = 'registro_attivita_struttura_v1';
+const CONFIG_ACTIVITIES_DATA_KEY = '__CONFIG__';
+const CONFIG_ACTIVITIES_ITEM_ID = '__ATTIVITA_ORATORIO__';
+
 function getDailyActivities(dateStr) {
-  const key = `registro_attivita_${dateStr}`;
-  const saved = localStorage.getItem(key);
-  if (saved) {
+  const saved = localStorage.getItem(GLOBAL_ACTIVITIES_KEY);
+  if (saved !== null) {
     try {
       const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed)) return parsed;
     } catch (e) {}
   }
-  return DEFAULT_ACTIVITIES;
+  return DEFAULT_ACTIVITIES.map((a) => ({ ...a }));
 }
 
 function saveDailyActivities(dateStr, activities) {
-  const key = `registro_attivita_${dateStr}`;
-  localStorage.setItem(key, JSON.stringify(activities));
+  const jsonStr = JSON.stringify(activities);
+  localStorage.setItem(GLOBAL_ACTIVITIES_KEY, jsonStr);
+
+  const client = getSupabaseClient();
+  if (client) {
+    client.from('presenze').upsert(
+      {
+        data: CONFIG_ACTIVITIES_DATA_KEY,
+        iscritto_id: CONFIG_ACTIVITIES_ITEM_ID,
+        catechismo: false,
+        oratorio: false,
+        messa: false,
+        uscito: false,
+        ora_uscita: '',
+        note_giorno: jsonStr,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'data,iscritto_id' }
+    ).then(({ error }) => {
+      if (error) console.warn('Supabase upsert activities error:', error.message);
+    });
+  }
 }
 
 // 10. SUPABASE CLOUD (Collegamento Diretto e Autenticato al Database)
@@ -674,6 +722,23 @@ async function syncRemoteSupabase(dateStr, onSyncedCallback) {
       saveAllAttendance(all);
     } else if (attErr) {
       console.warn('Avviso lettura presenze da Supabase:', attErr.message);
+    }
+
+    // Sincronizza la struttura globale delle attività dell'oratorio (visibile a tutti, valida per tutti i giorni)
+    const { data: remoteActConfig, error: actErr } = await client
+      .from('presenze')
+      .select('note_giorno')
+      .eq('data', CONFIG_ACTIVITIES_DATA_KEY)
+      .eq('iscritto_id', CONFIG_ACTIVITIES_ITEM_ID)
+      .maybeSingle();
+
+    if (!actErr && remoteActConfig && remoteActConfig.note_giorno) {
+      try {
+        const parsedAct = JSON.parse(remoteActConfig.note_giorno);
+        if (Array.isArray(parsedAct)) {
+          localStorage.setItem(GLOBAL_ACTIVITIES_KEY, JSON.stringify(parsedAct));
+        }
+      } catch (e) {}
     }
 
     const isConnected = !peopleErr && !attErr;

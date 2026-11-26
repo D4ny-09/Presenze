@@ -1,7 +1,7 @@
 /**
  * ==========================================================================
  * REGISTRO PRESENZE ORATORIO - js/app.js
- * Logica Condivisa: Data, Navigazione, Modali con Telefoni Multipli, PWA e Titoli
+ * Logica Condivisa: Data, Navigazione Laterale Mobile, Modali, PWA e Versione
  * ==========================================================================
  */
 
@@ -42,6 +42,98 @@ function showToast(message) {
   toastTimeout = setTimeout(() => {
     toastEl.style.display = 'none';
   }, 2800);
+}
+
+// 3B. BARRA DI NAVIGAZIONE LATERALE SU MOBILE
+function initMobileSidebar() {
+  const headerBrand = document.querySelector('.app-header .header-brand');
+  const navWrapper = document.querySelector('.tab-nav-wrapper');
+  if (!headerBrand || !navWrapper) return;
+
+  if (!document.getElementById('mobileMenuToggle')) {
+    const toggleBtn = document.createElement('button');
+    toggleBtn.type = 'button';
+    toggleBtn.id = 'mobileMenuToggle';
+    toggleBtn.className = 'mobile-menu-btn';
+    toggleBtn.setAttribute('aria-label', 'Apri menu di navigazione');
+    toggleBtn.innerHTML = '<i class="fa-solid fa-bars"></i>';
+    headerBrand.insertBefore(toggleBtn, headerBrand.firstChild);
+  }
+
+  if (!navWrapper.querySelector('.mobile-sidebar-header')) {
+    const sidebarHeader = document.createElement('div');
+    sidebarHeader.className = 'mobile-sidebar-header';
+    sidebarHeader.innerHTML = `
+      <div class="mobile-sidebar-title">
+        <i class="fa-solid fa-church"></i>
+        <span>Menu Navigazione</span>
+      </div>
+      <button type="button" id="mobileSidebarClose" class="mobile-sidebar-close" aria-label="Chiudi menu">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    `;
+    navWrapper.insertBefore(sidebarHeader, navWrapper.firstChild);
+  }
+
+  if (!document.getElementById('mobileSidebarClasses')) {
+    const classesSection = document.createElement('div');
+    classesSection.id = 'mobileSidebarClasses';
+    classesSection.className = 'mobile-sidebar-classes';
+    navWrapper.appendChild(classesSection);
+  }
+
+  let backdrop = document.getElementById('mobileSidebarBackdrop');
+  if (!backdrop) {
+    backdrop = document.createElement('div');
+    backdrop.id = 'mobileSidebarBackdrop';
+    backdrop.className = 'mobile-sidebar-backdrop';
+    document.body.appendChild(backdrop);
+  }
+
+  function openSidebar() {
+    navWrapper.classList.add('open');
+    backdrop.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeSidebar() {
+    navWrapper.classList.remove('open');
+    backdrop.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  window.closeMobileSidebar = closeSidebar;
+  window.isMobileView = function () {
+    return window.innerWidth <= 768;
+  };
+
+  const toggleBtn = document.getElementById('mobileMenuToggle');
+  const closeBtn = document.getElementById('mobileSidebarClose');
+
+  if (toggleBtn) toggleBtn.addEventListener('click', openSidebar);
+  if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+  backdrop.addEventListener('click', closeSidebar);
+
+  navWrapper.querySelectorAll('a').forEach((link) => {
+    link.addEventListener('click', closeSidebar);
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && navWrapper.classList.contains('open')) {
+      closeSidebar();
+    }
+  });
+}
+
+// 3C. FOOTER VERSIONE AUTOMATICA IN FONDO ALLE PAGINE
+function renderAppFooter() {
+  if (document.getElementById('appVersionFooter')) return;
+  const v = window.APP_VERSION || { count: 16, label: 'v1.16', updatedAt: '' };
+  const footer = document.createElement('footer');
+  footer.id = 'appVersionFooter';
+  footer.className = 'app-footer';
+  footer.innerHTML = `Registro Presenze Oratorio &amp; Catechismo &bull; Versione <strong>${escapeHtml(v.label)}</strong>`;
+  document.body.appendChild(footer);
 }
 
 // 4. GESTIONE DATA CONDIVISA
@@ -148,9 +240,93 @@ function initDatabaseSyncButton() {
   });
 }
 
-// 7. MODALE PROFILO ISCRITTO CON TELEFONI MULTIPLI
+// 7. MODALE PROFILO ISCRITTO CON TELEFONI MULTIPLI + AMBITO USCITE/NOTE (OGGI vs ANNO)
 let currentEditingPersonId = null;
 let userTouchedCatechismoCheckbox = false;
+let currentNoteScope = 'anno';
+let scopeDrafts = {
+  anno: { deleghe: '', note: '' },
+  giorno: { deleghe: '', note: '' },
+};
+
+function formatShortItalianDate(dateStr) {
+  if (!dateStr) return '';
+  const parts = dateStr.split('-');
+  if (parts.length !== 3) return dateStr;
+  return `${parts[2]}/${parts[1]}/${parts[0]}`;
+}
+
+function updateScopeUI(selectedScope) {
+  currentNoteScope = selectedScope;
+  const optGiorno = document.getElementById('scopeOptGiorno');
+  const optAnno = document.getElementById('scopeOptAnno');
+  const radioGiorno = document.getElementById('radioScopeGiorno');
+  const radioAnno = document.getElementById('radioScopeAnno');
+
+  if (radioGiorno) radioGiorno.checked = selectedScope === 'giorno';
+  if (radioAnno) radioAnno.checked = selectedScope === 'anno';
+  if (optGiorno) optGiorno.classList.toggle('active', selectedScope === 'giorno');
+  if (optAnno) optAnno.classList.toggle('active', selectedScope === 'anno');
+
+  const lblDeleghe = document.querySelector('label[for="inputDeleghe"]');
+  const lblNote = document.querySelector('label[for="inputNote"]');
+  if (lblDeleghe) {
+    lblDeleghe.textContent = selectedScope === 'giorno'
+      ? 'Uscite anticipate / Deleghe (Solo per oggi)'
+      : 'Uscite / Deleghe (Per tutto l\'anno)';
+  }
+  if (lblNote) {
+    lblNote.textContent = selectedScope === 'giorno'
+      ? 'Note per gli animatori (Solo per oggi)'
+      : 'Note aggiuntive (Per tutto l\'anno)';
+  }
+}
+
+function ensureScopeSelectorInModal() {
+  const inputDeleghe = document.getElementById('inputDeleghe');
+  if (!inputDeleghe || document.getElementById('usciteNoteScopeBox')) return;
+
+  const delegheGroup = inputDeleghe.closest('.form-group');
+  if (!delegheGroup || !delegheGroup.parentElement) return;
+
+  const box = document.createElement('div');
+  box.id = 'usciteNoteScopeBox';
+  box.className = 'scope-toggle-box';
+  box.innerHTML = `
+    <div class="scope-toggle-title">
+      <i class="fa-solid fa-calendar-week"></i>
+      <span>Le uscite anticipate e le note valgono per tutto l'anno o solo per questo giorno?</span>
+    </div>
+    <div class="scope-options-row">
+      <label class="scope-option" id="scopeOptGiorno">
+        <input type="radio" name="usciteNoteScope" id="radioScopeGiorno" value="giorno">
+        <span id="scopeLabelGiorno">Solo per oggi</span>
+      </label>
+      <label class="scope-option active" id="scopeOptAnno">
+        <input type="radio" name="usciteNoteScope" id="radioScopeAnno" value="anno" checked>
+        <span>Per tutto l'anno</span>
+      </label>
+    </div>
+  `;
+
+  delegheGroup.parentElement.insertBefore(box, delegheGroup);
+
+  const handleScopeChange = (newScope) => {
+    if (newScope === currentNoteScope) return;
+    const delEl = document.getElementById('inputDeleghe');
+    const noteEl = document.getElementById('inputNote');
+    scopeDrafts[currentNoteScope] = {
+      deleghe: delEl ? delEl.value : '',
+      note: noteEl ? noteEl.value : '',
+    };
+    updateScopeUI(newScope);
+    if (delEl) delEl.value = scopeDrafts[newScope].deleghe || '';
+    if (noteEl) noteEl.value = scopeDrafts[newScope].note || '';
+  };
+
+  box.querySelector('#radioScopeGiorno').addEventListener('change', () => handleScopeChange('giorno'));
+  box.querySelector('#radioScopeAnno').addEventListener('change', () => handleScopeChange('anno'));
+}
 
 function renderPhonesInModal(phonesList) {
   const container = document.getElementById('phonesContainer');
@@ -160,7 +336,7 @@ function renderPhonesInModal(phonesList) {
 
   const phones = phonesList && phonesList.length > 0 ? phonesList : [{ etichetta: 'Mamma', numero: '' }];
 
-  phones.forEach((p, idx) => {
+  phones.forEach((p) => {
     const row = document.createElement('div');
     row.className = 'phone-input-row';
     row.style.cssText = 'display: flex; gap: 8px; align-items: center; margin-bottom: 6px;';
@@ -211,6 +387,8 @@ function initPersonModal() {
   const btnAddPhone = document.getElementById('btnAddPhoneField');
 
   if (!modal) return;
+
+  ensureScopeSelectorInModal();
 
   function closeModal() {
     modal.classList.remove('open');
@@ -314,17 +492,23 @@ function initPersonModal() {
     form.addEventListener('submit', (e) => {
       e.preventDefault();
 
-      const isNotesOnly = typeof isAnimatore === 'function' && isAnimatore();
+      const isAnimatoreEdit = typeof isAnimatore === 'function' && isAnimatore();
       const canFullEdit = typeof canEditPeopleInfo === 'function' ? canEditPeopleInfo() : true;
 
-      if (!canFullEdit && !isNotesOnly) {
+      if (!canFullEdit && !isAnimatoreEdit) {
         showToast('Non hai i permessi per modificare i dati dei ragazzi.');
         return;
       }
 
-      const isEdit = Boolean(currentEditingPersonId);
+      // Salva il contenuto attuale nel draft dello scope selezionato
+      const delVal = (document.getElementById('inputDeleghe').value || '').trim();
+      const noteVal = (document.getElementById('inputNote').value || '').trim();
+      scopeDrafts[currentNoteScope] = { deleghe: delVal, note: noteVal };
 
-      if (isNotesOnly) {
+      const isEdit = Boolean(currentEditingPersonId);
+      const currentDate = getCurrentDate();
+
+      if (isAnimatoreEdit) {
         if (!isEdit) {
           showToast('Gli animatori non possono inserire nuovi ragazzi.');
           return;
@@ -334,14 +518,33 @@ function initPersonModal() {
           closeModal();
           return;
         }
-        const updatedNote = (document.getElementById('inputNote').value || '').trim();
-        const personToSave = {
-          ...existing,
-          note: updatedNote,
-        };
-        saveSinglePerson(personToSave);
+
+        if (currentNoteScope === 'anno') {
+          const personToSave = {
+            ...existing,
+            deleghe: scopeDrafts.anno.deleghe,
+            note: scopeDrafts.anno.note,
+          };
+          saveSinglePerson(personToSave);
+          showToast('Uscite / Deleghe e Note annuali aggiornate!');
+        } else {
+          const dayAtt = getDayAttendance(currentDate);
+          const currentRecord = dayAtt[existing.id] || {
+            catechismo: false,
+            oratorio: false,
+            messa: false,
+            uscito: false,
+            oraUscita: '',
+          };
+          const updatedRecord = {
+            ...currentRecord,
+            noteGiorno: serializeDailyNoteAndExit(scopeDrafts.giorno.deleghe, scopeDrafts.giorno.note),
+          };
+          savePersonAttendance(currentDate, existing.id, updatedRecord);
+          showToast(`Uscite / Note salvate per il ${formatShortItalianDate(currentDate)}!`);
+        }
+
         closeModal();
-        showToast('Note aggiornate!');
         if (typeof window.onDataUpdated === 'function') {
           window.onDataUpdated();
         }
@@ -355,8 +558,6 @@ function initPersonModal() {
       const inputCat = document.getElementById('inputCatechismo');
       const iscrittoCatechismo = inputCat ? inputCat.checked : true;
       const allergie = (document.getElementById('inputAllergie').value || '').trim();
-      const deleghe = (document.getElementById('inputDeleghe').value || '').trim();
-      const note = (document.getElementById('inputNote').value || '').trim();
 
       if (!nome || !cognome) {
         alert('Inserisci sia il nome che il cognome!');
@@ -374,8 +575,9 @@ function initPersonModal() {
         }
       });
 
+      const personId = isEdit ? currentEditingPersonId : `p_${Date.now()}`;
       const personToSave = {
-        id: isEdit ? currentEditingPersonId : `p_${Date.now()}`,
+        id: personId,
         nome,
         cognome,
         ruolo,
@@ -383,11 +585,31 @@ function initPersonModal() {
         iscrittoCatechismo,
         telefoni: phones,
         allergie,
-        deleghe,
-        note,
+        deleghe: scopeDrafts.anno.deleghe,
+        note: scopeDrafts.anno.note,
       };
 
       saveSinglePerson(personToSave);
+
+      // Se ci sono uscite/note giornaliere o l'utente ha modificato lo scope giornaliero, salva anche per oggi
+      if (currentNoteScope === 'giorno' || scopeDrafts.giorno.deleghe || scopeDrafts.giorno.note) {
+        const dayAtt = getDayAttendance(currentDate);
+        const currentRecord = dayAtt[personId] || {
+          catechismo: false,
+          oratorio: false,
+          messa: false,
+          uscito: false,
+          oraUscita: '',
+        };
+        const serializedDaily = serializeDailyNoteAndExit(scopeDrafts.giorno.deleghe, scopeDrafts.giorno.note);
+        if (currentRecord.noteGiorno !== serializedDaily && (serializedDaily || currentRecord.noteGiorno)) {
+          savePersonAttendance(currentDate, personId, {
+            ...currentRecord,
+            noteGiorno: serializedDaily,
+          });
+        }
+      }
+
       closeModal();
       showToast(isEdit ? 'Profilo aggiornato!' : 'Nuovo iscritto salvato!');
 
@@ -400,14 +622,14 @@ function initPersonModal() {
 
 function openPersonModal(person, prefillAnno) {
   const canFullEdit = typeof canEditPeopleInfo === 'function' ? canEditPeopleInfo() : true;
-  const isNotesOnly = typeof isAnimatore === 'function' && isAnimatore();
+  const isAnimatoreEdit = typeof isAnimatore === 'function' && isAnimatore();
 
   if (!person && (typeof canAddOrDeletePeople === 'function' && !canAddOrDeletePeople())) {
     showToast('Solo l\'amministratore può inserire nuovi iscritti.');
     return;
   }
 
-  if (person && !canFullEdit && !isNotesOnly) {
+  if (person && !canFullEdit && !isAnimatoreEdit) {
     showToast('Non hai i permessi per modificare i dati dei ragazzi.');
     return;
   }
@@ -419,12 +641,14 @@ function openPersonModal(person, prefillAnno) {
 
   if (!modal) return;
 
+  ensureScopeSelectorInModal();
+
   currentEditingPersonId = person ? person.id : null;
   userTouchedCatechismoCheckbox = Boolean(person);
 
   if (modalTitle) {
-    if (isNotesOnly) {
-      modalTitle.textContent = 'Note Ragazzo (Solo Note)';
+    if (isAnimatoreEdit) {
+      modalTitle.textContent = 'Uscite / Deleghe & Note';
     } else {
       modalTitle.textContent = person ? 'Modifica Iscritto' : 'Nuovo Iscritto';
     }
@@ -452,14 +676,40 @@ function openPersonModal(person, prefillAnno) {
   }
 
   document.getElementById('inputAllergie').value = person ? person.allergie || '' : '';
-  document.getElementById('inputDeleghe').value = person ? person.deleghe || '' : '';
-  document.getElementById('inputNote').value = person ? person.note || '' : '';
+
+  // Prepara i dati per i due ambiti (Annuale vs Giornaliero)
+  const currentDate = getCurrentDate();
+  const dayAtt = getDayAttendance(currentDate);
+  const att = person ? dayAtt[person.id] : null;
+  const dailyParsed = parseDailyNoteAndExit(att ? att.noteGiorno : '');
+
+  scopeDrafts = {
+    anno: {
+      deleghe: person ? person.deleghe || '' : '',
+      note: person ? person.note || '' : '',
+    },
+    giorno: {
+      deleghe: dailyParsed.uscita || '',
+      note: dailyParsed.note || '',
+    },
+  };
+
+  const scopeLabelGiorno = document.getElementById('scopeLabelGiorno');
+  if (scopeLabelGiorno) {
+    scopeLabelGiorno.textContent = `Solo oggi (${formatShortItalianDate(currentDate)})`;
+  }
+
+  // Per l'animatore parte su "Solo oggi", per Admin su "Per tutto l'anno"
+  const initialScope = isAnimatoreEdit ? 'giorno' : 'anno';
+  updateScopeUI(initialScope);
+  document.getElementById('inputDeleghe').value = scopeDrafts[initialScope].deleghe;
+  document.getElementById('inputNote').value = scopeDrafts[initialScope].note;
 
   // Renderizza la lista dei telefoni
   const phones = person ? getPersonPhones(person) : [{ etichetta: 'Mamma', numero: '' }];
   renderPhonesInModal(phones);
 
-  // Blocca tutti i campi tranne Note se Animatore
+  // Blocca tutti i campi anagrafici se Animatore, ma lascia modificabili Uscite/Deleghe e Note!
   const readOnlyIds = [
     'inputNome',
     'inputCognome',
@@ -467,12 +717,14 @@ function openPersonModal(person, prefillAnno) {
     'selectAnno',
     'inputCatechismo',
     'inputAllergie',
-    'inputDeleghe',
   ];
   readOnlyIds.forEach((id) => {
     const el = document.getElementById(id);
     if (el) el.disabled = !canFullEdit;
   });
+
+  document.getElementById('inputDeleghe').disabled = false;
+  document.getElementById('inputNote').disabled = false;
 
   document.querySelectorAll('#phonesContainer .phone-label-input, #phonesContainer .phone-number-input').forEach((el) => {
     el.disabled = !canFullEdit;
@@ -482,8 +734,8 @@ function openPersonModal(person, prefillAnno) {
   });
 
   modal.classList.add('open');
-  if (isNotesOnly) {
-    document.getElementById('inputNote').focus();
+  if (isAnimatoreEdit) {
+    document.getElementById('inputDeleghe').focus();
   } else {
     document.getElementById('inputNome').focus();
   }
@@ -510,6 +762,9 @@ function escapeHtml(str) {
 
 // 8. INIZIALIZZAZIONE ALL'AVVIO
 document.addEventListener('DOMContentLoaded', async () => {
+  initMobileSidebar();
+  renderAppFooter();
+
   if (typeof window.whenAuthReady === 'function') {
     const session = await window.whenAuthReady();
     if (!session) return;

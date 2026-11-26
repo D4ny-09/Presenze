@@ -69,318 +69,6 @@ body {
   input, select, textarea {
     font-size: 16px !important;
   }
-
-  /* ---- MIGLIORAMENTI MOBILE ---- */
-
-  /* Header più compatto su mobile */
-  .app-header {
-    padding: 10px 12px;
-  }
-
-  .header-icon {
-    width: 38px;
-    height: 38px;
-    font-size: 1.3rem;
-    border-radius: 10px;
-  }
-
-  .main-title {
-    font-size: 1.15rem;
-  }
-
-  .sub-title {
-    font-size: 0.74rem;
-  }
-
-  .header-controls {
-    gap: 6px;
-    padding: 5px 8px;
-  }
-
-  /* Pulsanti header con padding adeguato al tocco mobile (min 44px) */
-  .date-btn {
-    min-width: 40px;
-    min-height: 40px;
-    padding: 8px 10px;
-    font-size: 0.78rem;
-    justify-content: center;
-  }
-
-  .date-btn i {
-    font-size: 1rem;
-    padding: 2px;
-  }
-
-  .date-label {
-    display: none; /* Nasconde "Data:" su mobile per risparmiare spazio */
-  }
-
-  .date-input {
-    padding: 8px 6px;
-    font-size: 0.82rem;
-    min-height: 40px;
-  }
-
-  .db-status-btn,
-  .cloud-btn {
-    padding: 6px 10px;
-    font-size: 0.72rem;
-    min-height: 40px;
-  }
-
-  /* Tab di navigazione compatti su mobile */
-  .tab-nav {
-    gap: 6px;
-    padding: 8px 10px;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .tab-btn {
-    min-width: auto;
-    padding: 10px 12px;
-    font-size: 0.8rem;
-    gap: 6px;
-    border-radius: 10px;
-  }
-
-  .tab-btn i {
-    font-size: 1rem;
-    padding: 2px;
-  }
-
-  .tab-btn span {
-    display: none; /* Solo icone sui tab in mobile */
-  }
-
-  .nav-switch-discreet {
-    padding: 8px 10px;
-    font-size: 0.76rem;
-    gap: 6px;
-  }
-
-  .nav-switch-discreet span {
-    display: none; /* Solo icona su mobile */
-  }
-
-  .nav-switch-discreet i:last-child {
-    display: none; /* Nasconde la freccia → */
-  }
-
-  /* Contenitore principale con meno margine laterale */
-  .main-container {
-    margin: 10px auto;
-    padding: 0 8px;
-  }
-
-  .card-panel {
-    padding: 14px 12px;
-    border-radius: 12px;
-    margin-bottom: 10px;
-  }
-
-  /* Bottoni con icone: padding adeguato per il tocco su mobile */
-  .btn-add,
-  .btn-action-oratorio,
-  .btn-action-catechismo,
-  .btn-action-secondary {
-    min-height: 44px;
-    padding: 10px 14px;
-    font-size: 0.82rem;
-  }
-
-  .btn-add i,
-  .btn-action-oratorio i,
-  .btn-action-catechismo i,
-  .btn-action-secondary i {
-    font-size: 1rem;
-    padding: 2px;
-  }
-
-  /* Pulsanti P / A più grandi per il tocco */
-  .btn-pa {
-    width: 44px;
-    height: 42px;
-    font-size: 1.05rem;
-    border-radius: 8px;
-  }
-
-  .pa-group {
-    padding: 4px;
-    border-radius: 10px;
-    gap: 5px;
-  }
-
-  /* Pulsanti toggle (Messa, Uscita) più comodi */
-  .btn-reg-toggle {
-    min-height: 40px;
-    padding: 8px 10px;
-    font-size: 0.76rem;
-  }
-
-  .btn-reg-toggle i {
-    font-size: 0.9rem;
-    padding: 2px;
-  }
-
-  .btn-toggle-uscita {
-    min-height: 36px;
-    padding: 6px 10px;
-    font-size: 0.74rem;
-  }
-
-  /* Icona Modifica / Note con padding adeguato al tocco */
-  .btn-icon-edit {
-    min-width: 44px;
-    min-height: 44px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 10px;
-    font-size: 1.1rem;
-  }
-
-  /* Tabella registro su mobile: celle più compatte */
-  .register-sheet-table th,
-  .register-sheet-table td {
-    padding: 10px 8px;
-    font-size: 0.82rem;
-  }
-
-  .register-table th,
-  .register-table td {
-    padding: 10px 8px;
-  }
-
-  /* Pillole classi più comode al tocco */
-  .ora-pill-btn,
-  .cat-pill-btn,
-  .class-pill-btn {
-    min-height: 44px;
-    padding: 10px 12px;
-  }
-
-  /* Badge telefoni con area di tocco sufficiente */
-  .btn-phone-pill {
-    min-height: 36px;
-    padding: 6px 10px;
-  }
-
-  /* Modale: riempie tutto lo schermo su mobile */
-  .modal-overlay {
-    padding: 8px;
-  }
-
-  .modal-container {
-    max-width: 100%;
-    max-height: 95vh;
-    border-radius: 14px;
-  }
-
-  .modal-header {
-    padding: 14px 16px;
-  }
-
-  .modal-form {
-    padding: 16px;
-    gap: 12px;
-  }
-
-  .modal-close-btn {
-    min-width: 44px;
-    min-height: 44px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.3rem;
-  }
-
-  /* Form input più alti per il tocco */
-  .form-input,
-  .form-select,
-  .form-textarea {
-    padding: 11px 12px;
-    min-height: 44px;
-  }
-
-  .form-actions {
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  .form-actions .btn-primary,
-  .form-actions .btn-secondary,
-  .form-actions .btn-danger {
-    min-height: 44px;
-    padding: 10px 16px;
-    flex: 1 1 auto;
-    justify-content: center;
-  }
-
-  /* Search input più grande */
-  .search-input {
-    min-height: 44px;
-    padding: 10px 14px;
-  }
-
-  /* Contatori più compatti */
-  .counters-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-  }
-
-  .counter-card {
-    padding: 10px 8px;
-  }
-
-  .counter-number {
-    font-size: 1.5rem;
-  }
-
-  /* Toast posizionamento mobile */
-  #app-toast {
-    left: 12px;
-    right: 12px;
-    bottom: 16px;
-    text-align: center;
-  }
-}
-
-/* Ultra-compact per schermi molto piccoli (< 480px) */
-@media (max-width: 480px) {
-  .header-brand {
-    gap: 8px;
-  }
-
-  .header-icon {
-    width: 34px;
-    height: 34px;
-    font-size: 1.1rem;
-  }
-
-  .main-title {
-    font-size: 1.05rem;
-  }
-
-  .header-controls {
-    justify-content: center;
-  }
-
-  /* Nasconde il testo "Oggi" nel bottone, mostra solo icona */
-  #btnToday span {
-    display: none;
-  }
-
-  /* Le pill-classi scorrono in orizzontale su schermi piccoli */
-  .oratorio-class-pills,
-  .cat-nav-pills {
-    scroll-snap-type: x mandatory;
-  }
-
-  .ora-pill-btn,
-  .cat-pill-btn {
-    scroll-snap-align: start;
-    flex-shrink: 0;
-  }
 }
 
 a {
@@ -2047,5 +1735,479 @@ button, input, select, textarea {
   .print-table th {
     background-color: #f1f5f9;
     font-weight: 700;
+  }
+}
+
+
+/* ==========================================================================
+   AGGIORNAMENTI: BARRA LATERALE MOBILE, ALLINEAMENTO TABELLE, SCOPE NOTE & FOOTER
+   ========================================================================== */
+
+/* Pulsante menu laterale (solo mobile) */
+.mobile-menu-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  font-size: 1.2rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease;
+}
+
+.mobile-menu-btn:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.mobile-sidebar-header {
+  display: none;
+}
+
+.mobile-sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  z-index: 1150;
+  backdrop-filter: blur(2px);
+}
+
+.mobile-sidebar-backdrop.open {
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .mobile-menu-btn {
+    display: inline-flex;
+  }
+
+  .tab-nav-wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 275px;
+    max-width: 84vw;
+    z-index: 1200;
+    background-color: #ffffff;
+    border-right: 1px solid var(--border-color);
+    border-bottom: none;
+    box-shadow: 6px 0 28px rgba(15, 23, 42, 0.22);
+    transform: translateX(-105%);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-y: auto;
+  }
+
+  .tab-nav-wrapper.open {
+    transform: translateX(0);
+  }
+
+  .mobile-sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px;
+    background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
+    color: #ffffff;
+  }
+
+  .mobile-sidebar-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 800;
+    font-size: 1.02rem;
+  }
+
+  .mobile-sidebar-close {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+    font-size: 1.05rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .tab-nav {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 14px;
+    gap: 8px;
+    overflow-x: visible;
+  }
+
+  .tab-btn {
+    width: 100%;
+    min-width: 0;
+    justify-content: flex-start;
+    padding: 12px 14px;
+  }
+
+  .nav-switch-discreet {
+    width: 100%;
+    margin-left: 0;
+    margin-top: 8px;
+    justify-content: flex-start;
+    padding: 11px 14px;
+  }
+}
+
+/* Allineamento uniforme colonne tabelle Appello (Oratorio & Catechismo) */
+.register-sheet-table th.col-num,
+.register-sheet-table td.col-num {
+  width: 48px;
+  text-align: center !important;
+}
+
+.register-sheet-table th.col-ragazzo,
+.register-sheet-table td.col-ragazzo {
+  min-width: 190px;
+  text-align: left !important;
+}
+
+.register-sheet-table th.col-appello,
+.register-sheet-table td.col-appello {
+  width: 112px;
+  text-align: center !important;
+}
+
+.register-sheet-table th.col-messa,
+.register-sheet-table td.col-messa {
+  width: 92px;
+  text-align: center !important;
+}
+
+.register-sheet-table th.col-oratorio,
+.register-sheet-table td.col-oratorio {
+  width: 102px;
+  text-align: center !important;
+}
+
+.register-sheet-table th.col-uscita,
+.register-sheet-table td.col-uscita {
+  width: 155px;
+  text-align: center !important;
+}
+
+.register-sheet-table th.col-telefoni,
+.register-sheet-table td.col-telefoni {
+  min-width: 135px;
+  text-align: left !important;
+}
+
+.register-sheet-table th.col-note,
+.register-sheet-table td.col-note {
+  min-width: 165px;
+  text-align: left !important;
+}
+
+/* Selettore ambito Uscite / Note (Solo oggi vs Tutto l'anno) */
+.scope-toggle-box {
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+
+.scope-toggle-title {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #312e81;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.scope-options-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.scope-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.scope-option.active {
+  border-color: #4f46e5;
+  background: #f5f3ff;
+  color: #3730a3;
+  box-shadow: 0 2px 6px rgba(79, 70, 229, 0.15);
+}
+
+.scope-option input[type="radio"] {
+  accent-color: #4f46e5;
+  cursor: pointer;
+}
+
+/* Selettore classi a destra nella zona Catechiste */
+.cat-class-switcher {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.cat-class-select {
+  background: rgba(255, 255, 255, 0.95);
+  color: #1e293b;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 10px;
+  padding: 7px 12px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  outline: none;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.15);
+}
+
+.cat-class-select:focus {
+  border-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+}
+
+/* Footer versione automatica */
+.app-footer {
+  max-width: 1100px;
+  margin: 20px auto 24px;
+  padding: 12px 16px;
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #64748b;
+  border-top: 1px solid #e2e8f0;
+}
+
+@media print {
+  .mobile-menu-btn,
+  .mobile-sidebar-backdrop,
+  .cat-class-switcher,
+  .app-footer {
+    display: none !important;
+  }
+}
+
+
+/* ==========================================================================
+   AGGIORNAMENTI MOBILE: CLASSI IN SIDEBAR, CARD APPELLO & A CAPO PRESERVATI
+   ========================================================================== */
+
+/* Preserva gli "a capo" (newline) nei testi inseriti */
+.activity-desc,
+.note-badge-multiline {
+  white-space: pre-line;
+  word-break: break-word;
+}
+
+/* Sezione classi nella barra laterale (nascosta su desktop) */
+.mobile-sidebar-classes {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  /* Nascondi selettore classi dalla pagina su telefono */
+  .mobile-hide-class-selector,
+  #catNavPillsContainer,
+  .cat-class-switcher-row {
+    display: none !important;
+  }
+
+  /* Mostra selettore classi nella barra laterale mobile */
+  .mobile-sidebar-classes:empty {
+    display: none !important;
+  }
+
+  .mobile-sidebar-classes {
+    display: block;
+    padding: 12px 14px 20px;
+    border-top: 1px solid #e2e8f0;
+    margin-top: 4px;
+  }
+
+  .mobile-sidebar-classes-title {
+    font-size: 0.74rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #64748b;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .mobile-sidebar-class-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .mobile-sidebar-class-btn {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    color: #334155;
+    font-size: 0.86rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    text-align: left;
+    transition: all 0.15s ease;
+  }
+
+  .mobile-sidebar-class-btn.active {
+    background: #4f46e5;
+    color: #ffffff;
+    border-color: #4f46e5;
+    box-shadow: 0 3px 8px rgba(79, 70, 229, 0.25);
+  }
+
+  .mobile-sidebar-class-count {
+    background: rgba(15, 23, 42, 0.08);
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    font-weight: 800;
+  }
+
+  .mobile-sidebar-class-btn.active .mobile-sidebar-class-count {
+    background: rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+  }
+
+  /* Layout Card Estetico per Appello su Telefono (niente scroll orizzontale) */
+  .register-sheet-table,
+  .register-sheet-table tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .register-sheet-table thead {
+    display: none;
+  }
+
+  .register-sheet-table tbody {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: #f8fafc;
+  }
+
+  .register-sheet-table tbody tr {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px 10px;
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 12px;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  }
+
+  .register-sheet-table tbody tr.row-presente {
+    background-color: #f0fdf4 !important;
+    border-color: #bbf7d0;
+  }
+
+  .register-sheet-table tbody tr.row-assente {
+    background-color: #fef2f2 !important;
+    border-color: #fecaca;
+  }
+
+  .register-sheet-table td {
+    border-bottom: none !important;
+    padding: 0 !important;
+    width: auto !important;
+    min-width: 0 !important;
+  }
+
+  .register-sheet-table td.col-num {
+    display: none;
+  }
+
+  .register-sheet-table td.col-ragazzo {
+    grid-column: 1 / 2;
+    text-align: left !important;
+  }
+
+  .register-sheet-table td.col-appello {
+    grid-column: 2 / 3;
+    justify-self: end;
+  }
+
+  .register-sheet-table td.col-messa,
+  .register-sheet-table td.col-oratorio,
+  .register-sheet-table td.col-uscita {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 6px !important;
+    border-top: 1px dashed rgba(148, 163, 184, 0.3) !important;
+    text-align: left !important;
+  }
+
+  .register-sheet-table td.col-messa::before {
+    content: "S. Messa";
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: #64748b;
+  }
+
+  .register-sheet-table td.col-oratorio::before {
+    content: "Oratorio";
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: #64748b;
+  }
+
+  .register-sheet-table td.col-uscita::before {
+    content: "Stato Uscita";
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: #64748b;
+  }
+
+  .register-sheet-table td.col-uscita > div {
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+
+  .register-sheet-table td.col-telefoni,
+  .register-sheet-table td.col-note {
+    grid-column: 1 / -1;
+    padding-top: 6px !important;
+    border-top: 1px dashed rgba(148, 163, 184, 0.3) !important;
   }
 }

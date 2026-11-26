@@ -20,6 +20,7 @@
   <link rel="stylesheet" href="css/style.css">
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/version.js"></script>
   <script src="js/auth.js"></script>
 
   <style>
@@ -191,10 +192,13 @@
         </button>
       </form>
     </div>
+    <div id="loginVersionFooter" style="text-align: center; padding: 10px 16px 14px; font-size: 0.74rem; color: #64748b; border-top: 1px solid #f1f5f9;"></div>
   </main>
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
+      const lv = document.getElementById('loginVersionFooter');
+      if (lv && window.APP_VERSION) { lv.innerHTML = 'Versione <strong>' + window.APP_VERSION.label + '</strong>'; }
       const usernameInput = document.getElementById('loginUsername');
       const passwordInput = document.getElementById('loginPassword');
       const toggleBtn = document.getElementById('togglePasswordBtn');

@@ -8,6 +8,12 @@
 let selectedOratorioClass = localStorage.getItem('oratorio_classe_selezionata') || 'tutti';
 let oratorioSearchQuery = '';
 
+function isMobileAnimatoreLockedToAllClasses() {
+  const isMob = typeof window.isMobileView === 'function' ? window.isMobileView() : window.innerWidth <= 768;
+  const isAnim = typeof isAnimatore === 'function' && isAnimatore();
+  return isMob && isAnim && selectedOratorioClass !== 'tutti';
+}
+
 // 1. RENDERING COMPLETO DELL'APPELLO ORATORIO
 function renderAppelloOratorio() {
   const currentDate = getCurrentDate();
@@ -56,8 +62,10 @@ function renderAppelloOratorio() {
   // Filtra per ricerca testuale
   const filtered = classKids.filter((k) => {
     if (!oratorioSearchQuery.trim()) return true;
+    const att = dayAttendance[k.id] || {};
+    const daily = parseDailyNoteAndExit(att.noteGiorno || '');
     const q = oratorioSearchQuery.toLowerCase().trim();
-    return `${k.cognome} ${k.nome} ${k.allergie || ''} ${k.deleghe || ''} ${k.note || ''}`.toLowerCase().includes(q);
+    return `${k.cognome} ${k.nome} ${k.allergie || ''} ${k.deleghe || ''} ${k.note || ''} ${daily.uscita} ${daily.note}`.toLowerCase().includes(q);
   });
 
   const tableBody = document.getElementById('registerOratorioTableBody');
@@ -83,8 +91,10 @@ function renderAppelloOratorio() {
       messa: false,
       uscito: false,
       oraUscita: '',
+      noteGiorno: '',
     };
 
+    const daily = parseDailyNoteAndExit(att.noteGiorno || '');
     const isPresentInCortile = Boolean(att.oratorio);
     const initials = `${(k.nome || 'A').charAt(0)}${(k.cognome || 'B').charAt(0)}`.toUpperCase();
     const phones = getPersonPhones(k);
@@ -110,37 +120,55 @@ function renderAppelloOratorio() {
         `
         )
         .join('');
+    } else {
+      phonesHtml = `<span style="color: #94a3b8; font-size: 0.75rem;">—</span>`;
     }
 
-    // Badge Allergie / Deleghe
-    let alertsHtml = '';
-    if (k.allergie || k.deleghe || k.note) {
-      alertsHtml = `
-        <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;">
-          ${k.allergie ? `
-            <span style="background: #fee2e2; border: 1px solid #fecaca; color: #991b1b; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
-              <i class="fa-solid fa-triangle-exclamation"></i> ${escapeHtml(k.allergie)}
-            </span>
-          ` : ''}
-          ${k.deleghe ? `
-            <span style="background: #fef3c7; border: 1px solid #fcd34d; color: #92400e; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
-              <i class="fa-solid fa-clock"></i> ${escapeHtml(k.deleghe)}
-            </span>
-          ` : ''}
-          ${k.note ? `
-            <span style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem;">
-              ${escapeHtml(k.note)}
-            </span>
-          ` : ''}
-        </div>
-      `;
+    // Badge Allergie sotto al nome
+    const allergyHtml = k.allergie ? `
+      <div style="margin-top: 4px;">
+        <span style="background: #fee2e2; border: 1px solid #fecaca; color: #991b1b; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+          <i class="fa-solid fa-triangle-exclamation"></i> ${escapeHtml(k.allergie)}
+        </span>
+      </div>
+    ` : '';
+
+    // Contenuto colonna Note (Uscite/Deleghe annuali e giornaliere + Note annuali e giornaliere)
+    const noteBadges = [];
+    if (daily.uscita) {
+      noteBadges.push(`
+        <span class="note-badge-multiline" style="background: #ffedd5; border: 1px solid #fdba74; color: #9a3412; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+          <i class="fa-solid fa-clock"></i> Oggi: ${escapeHtml(daily.uscita)}
+        </span>
+      `);
+    }
+    if (k.deleghe) {
+      noteBadges.push(`
+        <span class="note-badge-multiline" style="background: #fef3c7; border: 1px solid #fcd34d; color: #92400e; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+          <i class="fa-solid fa-door-open"></i> ${escapeHtml(k.deleghe)}
+        </span>
+      `);
+    }
+    if (daily.note) {
+      noteBadges.push(`
+        <span class="note-badge-multiline" style="background: #e0e7ff; border: 1px solid #c7d2fe; color: #3730a3; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 600;">
+          Oggi: ${escapeHtml(daily.note)}
+        </span>
+      `);
+    }
+    if (k.note) {
+      noteBadges.push(`
+        <span class="note-badge-multiline" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem;">
+          ${escapeHtml(k.note)}
+        </span>
+      `);
     }
 
-    // Stato Uscita Genitore
     const canMessa = typeof canToggleMessa === 'function' ? canToggleMessa() : true;
     const canUscita = typeof canToggleUscitaFamiglia === 'function' ? canToggleUscitaFamiglia() : true;
     const canFullEdit = typeof canEditPeopleInfo === 'function' ? canEditPeopleInfo() : true;
     const canNotes = typeof canEditNotes === 'function' ? canEditNotes() : true;
+    const lockPaMobile = isMobileAnimatoreLockedToAllClasses();
 
     let uscitaCellHtml = '';
     if (isPresentInCortile) {
@@ -185,12 +213,12 @@ function renderAppelloOratorio() {
 
     tr.innerHTML = `
       <!-- N° Progressivo -->
-      <td style="text-align: center; font-weight: 800; color: #64748b;">
+      <td class="col-num" style="font-weight: 800; color: #64748b;">
         ${idx + 1}
       </td>
 
-      <!-- Ragazzo / Alunno -->
-      <td>
+      <!-- Ragazzo (Nome e Classe su due righe differenti) -->
+      <td class="col-ragazzo">
         <div style="display: flex; align-items: center; gap: 10px;">
           <div style="width: 34px; height: 34px; border-radius: 8px; background: ${isPresentInCortile ? '#dcfce7' : '#e0f2fe'}; color: ${isPresentInCortile ? '#15803d' : '#4338ca'}; font-weight: 800; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; border: 1px solid ${isPresentInCortile ? '#86efac' : '#c7d2fe'}; flex-shrink: 0;">
             ${initials}
@@ -198,20 +226,22 @@ function renderAppelloOratorio() {
           <div>
             <div style="font-size: 0.95rem; font-weight: 800; color: #0f172a; line-height: 1.2;">
               ${escapeHtml(k.cognome).toUpperCase()} ${escapeHtml(k.nome)}
-              <span style="font-size: 0.72rem; font-weight: 600; color: #64748b; margin-left: 4px;">(${annoName})</span>
             </div>
-            ${alertsHtml}
+            <div style="font-size: 0.75rem; font-weight: 600; color: #64748b; margin-top: 2px;">
+              ${escapeHtml(annoName)}
+            </div>
+            ${allergyHtml}
           </div>
         </div>
       </td>
 
-      <!-- Appello Oratorio P / A (NOTA: senza scritta "oratorio") -->
-      <td style="text-align: center;">
-        <div class="pa-group">
+      <!-- Appello Oratorio P / A -->
+      <td class="col-appello">
+        <div class="pa-group" ${lockPaMobile ? 'style="opacity: 0.55;" title="Su telefono segna i presenti da Tutte le Classi"' : ''}>
           <button
             type="button"
             class="btn-pa btn-p ${isPresentInCortile ? 'active' : ''}"
-            title="Presente in Oratorio (P)"
+            title="${lockPaMobile ? 'Su telefono segna i presenti solo da Tutte le Classi' : 'Presente in Oratorio (P)'}"
             onclick="setStudentOratorioPresence('${k.id}', true)"
           >
             P
@@ -219,7 +249,7 @@ function renderAppelloOratorio() {
           <button
             type="button"
             class="btn-pa btn-a ${!isPresentInCortile ? 'active' : ''}"
-            title="Assente dall'Oratorio (A)"
+            title="${lockPaMobile ? 'Su telefono segna i presenti solo da Tutte le Classi' : 'Assente dall\'Oratorio (A)'}"
             onclick="setStudentOratorioPresence('${k.id}', false)"
           >
             A
@@ -228,7 +258,7 @@ function renderAppelloOratorio() {
       </td>
 
       <!-- Messa -->
-      <td style="text-align: center;">
+      <td class="col-messa">
         <button
           type="button"
           class="btn-reg-toggle ${att.messa ? 'active-messa' : ''}"
@@ -239,20 +269,29 @@ function renderAppelloOratorio() {
         </button>
       </td>
 
-      <!-- Uscita Genitore (In Cortile / Uscito) -->
-      <td style="text-align: center;">
+      <!-- Stato Uscita -->
+      <td class="col-uscita">
         ${uscitaCellHtml}
       </td>
 
-      <!-- Telefoni Genitori & Note -->
-      <td>
-        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+      <!-- Telefoni -->
+      <td class="col-telefoni">
+        <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
           ${phonesHtml}
+        </div>
+      </td>
+
+      <!-- Note & Uscite/Deleghe -->
+      <td class="col-note">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+          <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+            ${noteBadges.length > 0 ? noteBadges.join('') : '<span style="color: #94a3b8; font-size: 0.75rem;">—</span>'}
+          </div>
           ${(canFullEdit || canNotes) ? `
           <button
             type="button"
             class="btn-icon-edit"
-            title="${canFullEdit ? 'Modifica scheda iscritto' : 'Aggiungi / Modifica Note'}"
+            title="${canFullEdit ? 'Modifica scheda iscritto' : 'Inserisci Uscite / Deleghe o Note'}"
             onclick="editPerson('${k.id}')"
           >
             <i class="fa-solid ${canFullEdit ? 'fa-pen-to-square' : 'fa-note-sticky'}"></i>
@@ -306,10 +345,60 @@ function renderOratorioClassPills(people) {
     };
     container.appendChild(btn);
   });
+
+  // Popola anche il selettore classi nella barra laterale mobile
+  const sidebarClasses = document.getElementById('mobileSidebarClasses');
+  if (sidebarClasses) {
+    sidebarClasses.innerHTML = `
+      <div class="mobile-sidebar-classes-title">
+        <i class="fa-solid fa-graduation-cap" style="color: #4f46e5;"></i>
+        <span>Seleziona Classe</span>
+      </div>
+      <div class="mobile-sidebar-class-list" id="mobileSidebarClassList"></div>
+    `;
+    const listEl = sidebarClasses.querySelector('#mobileSidebarClassList');
+
+    const makeSidebarBtn = (id, label, count) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = `mobile-sidebar-class-btn ${selectedOratorioClass === id ? 'active' : ''}`;
+      btn.innerHTML = `
+        <span>${label}</span>
+        <span class="mobile-sidebar-class-count">${count}</span>
+      `;
+      btn.onclick = () => {
+        selectedOratorioClass = id;
+        localStorage.setItem('oratorio_classe_selezionata', id);
+        if (typeof window.closeMobileSidebar === 'function') {
+          window.closeMobileSidebar();
+        }
+        renderAppelloOratorio();
+      };
+      listEl.appendChild(btn);
+    };
+
+    makeSidebarBtn('tutti', 'Tutte le Classi', people.length);
+    ORATORIO_CLASSES.forEach((c) => {
+      const count = people.filter((p) => p.anno === c.id).length;
+      makeSidebarBtn(c.id, c.label, count);
+    });
+  }
+
+  // Aggiorna stato pulsante "Segna Tutti Presenti" su mobile per animatori
+  const btnTuttiPresenti = document.getElementById('btnOraTuttiPresenti');
+  if (btnTuttiPresenti) {
+    const locked = isMobileAnimatoreLockedToAllClasses();
+    btnTuttiPresenti.style.opacity = locked ? '0.55' : '1';
+    btnTuttiPresenti.title = locked ? 'Su telefono segna i presenti solo da Tutte le Classi' : '';
+  }
 }
 
 // 3. TOGGLE PRESENZA IN ORATORIO P / A
 window.setStudentOratorioPresence = function (personId, isPresent) {
+  if (isMobileAnimatoreLockedToAllClasses()) {
+    showToast('Su telefono gli animatori possono inserire i presenti solo da "Tutte le Classi".');
+    return;
+  }
   const currentDate = getCurrentDate();
   const dayAtt = getDayAttendance(currentDate);
   const currentRecord = dayAtt[personId] || {
@@ -395,6 +484,10 @@ window.toggleUscitaGenitore = function (personId) {
 
 // 6. AZIONI RAPIDE BATCH
 function markAllVisiblePresentOratorio() {
+  if (isMobileAnimatoreLockedToAllClasses()) {
+    showToast('Su telefono gli animatori possono inserire i presenti solo da "Tutte le Classi".');
+    return;
+  }
   const currentDate = getCurrentDate();
   const people = getPeople();
   const dayAtt = getDayAttendance(currentDate);
@@ -436,8 +529,11 @@ function exportOratorioCSV() {
   let csv = '\uFEFFData,Cognome,Nome,Ruolo,Classe,Presente in Cortile,Messa,Uscito,Ora Uscita,Telefoni,Allergie,Deleghe,Note\n';
 
   people.forEach((p) => {
-    const att = dayAtt[p.id] || { catechismo: false, oratorio: false, messa: false, uscito: false, oraUscita: '' };
+    const att = dayAtt[p.id] || { catechismo: false, oratorio: false, messa: false, uscito: false, oraUscita: '', noteGiorno: '' };
+    const daily = parseDailyNoteAndExit(att.noteGiorno || '');
     const phonesStr = getPersonPhones(p).map((t) => `${t.etichetta}: ${t.numero}`).join(' / ');
+    const combinedDeleghe = [p.deleghe, daily.uscita ? `Oggi: ${daily.uscita}` : ''].filter(Boolean).join(' | ');
+    const combinedNotes = [p.note, daily.note ? `Oggi: ${daily.note}` : ''].filter(Boolean).join(' | ');
 
     const row = [
       `"${currentDate}"`,
@@ -451,8 +547,8 @@ function exportOratorioCSV() {
       `"${att.oraUscita || ''}"`,
       `"${phonesStr.replace(/"/g, '""')}"`,
       `"${(p.allergie || '').replace(/"/g, '""')}"`,
-      `"${(p.deleghe || '').replace(/"/g, '""')}"`,
-      `"${(p.note || '').replace(/"/g, '""')}"`,
+      `"${combinedDeleghe.replace(/"/g, '""')}"`,
+      `"${combinedNotes.replace(/"/g, '""')}"`,
     ];
     csv += row.join(',') + '\n';
   });
@@ -537,3 +633,9 @@ window.onDateUpdated = function () {
 window.onDataUpdated = function () {
   renderAppelloOratorio();
 };
+
+let resizeOratorioTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeOratorioTimer);
+  resizeOratorioTimer = setTimeout(renderAppelloOratorio, 150);
+});
